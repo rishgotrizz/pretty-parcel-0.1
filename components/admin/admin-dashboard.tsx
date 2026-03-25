@@ -1,33 +1,18 @@
 "use client";
 
-import {
-  BarChart3,
-  ImagePlus,
-  MousePointerClick,
-  Package,
-  Percent,
-  RefreshCcw,
-  ShoppingBag,
-  Sparkles,
-  Users
-} from "lucide-react";
-import { useEffect, useState, type ChangeEvent, type ComponentType, type FormEvent } from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts";
+import { BarChart3, MousePointerClick, Package, Percent, RefreshCcw, ShoppingBag, Sparkles, Users } from "lucide-react";
+import { useEffect, useState, type ComponentType, type FormEvent } from "react";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import { OrderTable } from "@/components/admin/order-table";
+import { ProductForm, type ProductFormFieldErrors, type ProductFormValues } from "@/components/admin/product-form";
 import { useToast } from "@/components/providers/toast-provider";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
 type ProductAdminItem = {
   _id: string;
   name: string;
+  slug: string;
   category: string;
   shortDescription: string;
   description: string;
@@ -74,7 +59,21 @@ type DashboardPayload = {
     total: number;
     createdAt: string;
     customerName: string;
+    customerEmail: string;
+    paymentStatus: string;
     itemCount: number;
+    items: Array<{ name: string; quantity: number; unitPrice: number; slug: string }>;
+    shippingAddress: {
+      fullName: string;
+      email: string;
+      phone: string;
+      line1: string;
+      line2: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      country: string;
+    } | null;
     customizationDetails?: {
       giftMessage?: string;
       nameCustomization?: string;
@@ -99,11 +98,10 @@ const revenueMetricCards = [
   { key: "abandonedCarts", label: "Abandoned carts", icon: Users }
 ] as const;
 
-const orderStatuses = ["pending", "paid", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"];
-
 const blankProduct: ProductAdminItem = {
   _id: "",
   name: "",
+  slug: "",
   category: "",
   shortDescription: "",
   description: "",
@@ -146,22 +144,41 @@ function ProductMetricCard({
   );
 }
 
+function toFormValues(product: ProductAdminItem | null): ProductFormValues {
+  const value = product ?? blankProduct;
+  return {
+    id: value._id || undefined,
+    name: value.name,
+    slug: value.slug ?? "",
+    category: value.category,
+    shortDescription: value.shortDescription,
+    description: value.description,
+    price: value.price ? String(value.price) : "",
+    compareAtPrice: value.compareAtPrice ? String(value.compareAtPrice) : "",
+    stock: String(value.stock ?? 0),
+    flashSalePrice: value.flashSalePrice ? String(value.flashSalePrice) : "",
+    flashSaleEndsAt: value.flashSaleEndsAt ? value.flashSaleEndsAt.slice(0, 10) : "",
+    tags: value.tags.join(", "),
+    specifications: value.specifications.join("\n"),
+    customisationNotes: value.customisationNotes ?? "",
+    isFeatured: value.isFeatured,
+    isActive: value.isActive,
+    images: value.images ?? []
+  };
+}
+
 export function AdminDashboard() {
   const [data, setData] = useState<DashboardPayload | null>(null);
   const [message, setMessage] = useState("");
   const [loadingDashboard, setLoadingDashboard] = useState(true);
   const [savingProduct, setSavingProduct] = useState(false);
   const [savingCoupon, setSavingCoupon] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
   const [activeDeleteId, setActiveDeleteId] = useState("");
   const [activeOrderId, setActiveOrderId] = useState("");
   const [editingProduct, setEditingProduct] = useState<ProductAdminItem | null>(null);
-  const [productImages, setProductImages] = useState<string[]>([]);
+  const [productFieldErrors, setProductFieldErrors] = useState<ProductFormFieldErrors>({});
+  const [productResetSignal, setProductResetSignal] = useState(0);
   const { pushToast } = useToast();
-
-  useEffect(() => {
-    setProductImages(editingProduct?.images ?? []);
-  }, [editingProduct]);
 
   async function readJson(response: Response) {
     try {
@@ -211,64 +228,43 @@ export function AdminDashboard() {
 
   function clearProductForm() {
     setEditingProduct(null);
-    setProductImages([]);
+    setProductFieldErrors({});
+    setProductResetSignal((value) => value + 1);
   }
 
-  async function handleImageSelection(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
-    if (!files.length) {
-      return;
-    }
-
-    try {
-      setUploadingImages(true);
-      const encodedImages = await Promise.all(
-        files.map(
-          (file) =>
-            new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(String(reader.result ?? ""));
-              reader.onerror = () => reject(new Error(`Could not read ${file.name}`));
-              reader.readAsDataURL(file);
-            })
-        )
-      );
-      setProductImages((current) => [...current, ...encodedImages.filter(Boolean)]);
-      pushToast("Image ready for preview and save.", "success");
-      event.target.value = "";
-    } catch (error) {
-      console.error("[AdminDashboard] image upload failed", error);
-      pushToast("We couldn't prepare that image.", "error");
-    } finally {
-      setUploadingImages(false);
-    }
-  }
-
-  async function saveProduct(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!productImages.length) {
-      setMessage("Please upload at least one product image.");
-      pushToast("Please upload at least one product image.", "error");
-      return;
-    }
-
-    const formData = new FormData(event.currentTarget);
-    const payload = Object.fromEntries(formData.entries());
-    const method = payload.id ? "PATCH" : "POST";
+  async function saveProduct(values: ProductFormValues) {
+    setProductFieldErrors({});
 
     try {
       setSavingProduct(true);
       const response = await fetch("/api/admin/products", {
-        method,
+        method: values.id ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          ...payload,
-          images: productImages
+          id: values.id,
+          name: values.name,
+          slug: values.slug,
+          category: values.category,
+          shortDescription: values.shortDescription,
+          description: values.description,
+          price: values.price,
+          compareAtPrice: values.compareAtPrice,
+          stock: values.stock,
+          flashSalePrice: values.flashSalePrice,
+          flashSaleEndsAt: values.flashSaleEndsAt,
+          tags: values.tags,
+          specifications: values.specifications,
+          customisationNotes: values.customisationNotes,
+          isFeatured: values.isFeatured,
+          isActive: values.isActive,
+          images: values.images
         })
       });
       const result = await readJson(response);
+
       if (!response.ok) {
+        setProductFieldErrors(result.fieldErrors ?? {});
         setMessage(result.error ?? "Could not save product.");
         pushToast(result.error ?? "Could not save product.", "error");
         return;
@@ -279,7 +275,7 @@ export function AdminDashboard() {
           current
             ? {
                 ...current,
-                products: payload.id
+                products: values.id
                   ? current.products.map((product) => (product._id === result.product._id ? result.product : product))
                   : [result.product, ...current.products]
               }
@@ -287,8 +283,8 @@ export function AdminDashboard() {
         );
       }
 
-      setMessage(payload.id ? "Product updated successfully." : "Product created successfully.");
-      pushToast(payload.id ? "Product updated successfully." : "Product created successfully.", "success");
+      setMessage(values.id ? "Product updated successfully." : "Product added successfully.");
+      pushToast(values.id ? "Product updated successfully." : "Product added successfully.", "success");
       clearProductForm();
       void loadDashboard();
     } catch (error) {
@@ -361,7 +357,6 @@ export function AdminDashboard() {
       }
       setMessage("Product deleted.");
       pushToast("Product deleted.", "success");
-      void loadDashboard();
     } catch (error) {
       console.error("[AdminDashboard] delete product failed", error);
       setMessage("Could not delete product.");
@@ -440,8 +435,6 @@ export function AdminDashboard() {
   if (loadingDashboard || !data) {
     return <div className="section-shell py-14 text-sm text-rosewood/70">Loading admin dashboard...</div>;
   }
-
-  const currentProduct = editingProduct ?? blankProduct;
 
   return (
     <div className="section-shell space-y-8 py-10">
@@ -565,294 +558,84 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <div className="glass-panel rounded-[2rem] border border-white/70 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <section className="glass-panel rounded-[2rem] border border-white/70 p-6">
+          <ProductForm
+            product={toFormValues(editingProduct)}
+            fieldErrors={productFieldErrors}
+            saving={savingProduct}
+            resetSignal={productResetSignal}
+            onCancelEdit={editingProduct ? clearProductForm : undefined}
+            onSubmit={saveProduct}
+          />
+        </section>
+
+        <section className="glass-panel rounded-[2rem] border border-white/70 p-6">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">
-                {editingProduct ? "Edit product" : "Add product"}
-              </p>
-              <h2 className="mt-2 font-serif text-3xl text-cocoa">Product management</h2>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Inventory</p>
+              <h2 className="mt-2 font-serif text-3xl text-cocoa">{data.products.length} products in dashboard</h2>
             </div>
-            {editingProduct ? (
-              <button type="button" onClick={clearProductForm} className="button-secondary !py-2">
-                Clear form
-              </button>
-            ) : null}
+            <span className="rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-rosewood">
+              Live catalogue
+            </span>
           </div>
-
-          <form key={currentProduct._id || "new"} onSubmit={saveProduct} className="mt-6 grid gap-3 sm:grid-cols-2">
-            <input type="hidden" name="id" value={currentProduct._id} />
-            <input
-              name="name"
-              required
-              defaultValue={currentProduct.name}
-              placeholder="Product name"
-              className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm"
-            />
-            <input
-              name="category"
-              required
-              defaultValue={currentProduct.category}
-              placeholder="Category"
-              className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm"
-            />
-            <input
-              name="price"
-              required
-              type="number"
-              min="0"
-              defaultValue={currentProduct.price}
-              placeholder="Selling price"
-              className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm"
-            />
-            <input
-              name="compareAtPrice"
-              type="number"
-              min="0"
-              defaultValue={currentProduct.compareAtPrice}
-              placeholder="Original price / MRP"
-              className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm"
-            />
-            <input
-              name="stock"
-              required
-              type="number"
-              min="0"
-              defaultValue={currentProduct.stock}
-              placeholder="Stock"
-              className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm"
-            />
-            <input
-              name="flashSalePrice"
-              type="number"
-              min="0"
-              defaultValue={currentProduct.flashSalePrice}
-              placeholder="Flash sale price"
-              className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm"
-            />
-            <input
-              name="flashSaleEndsAt"
-              type="datetime-local"
-              defaultValue={currentProduct.flashSaleEndsAt}
-              className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm sm:col-span-2"
-            />
-            <input
-              name="shortDescription"
-              required
-              defaultValue={currentProduct.shortDescription}
-              placeholder="Short description"
-              className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm sm:col-span-2"
-            />
-            <textarea
-              name="description"
-              required
-              defaultValue={currentProduct.description}
-              placeholder="Full description"
-              className="min-h-28 rounded-[1rem] border bg-white/90 px-4 py-3 text-sm sm:col-span-2"
-            />
-
-            <div className="rounded-[1.5rem] border border-dashed border-pink-200 bg-white/85 p-4 sm:col-span-2">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-cocoa">Product images</p>
-                  <p className="mt-1 text-xs leading-6 text-rosewood/70">
-                    Upload product images directly. They are stored as image strings for this lightweight admin flow.
-                  </p>
-                </div>
-                <label className="button-secondary cursor-pointer !py-2">
-                  <ImagePlus className="h-4 w-4" />
-                  {uploadingImages ? "Preparing..." : "Upload image"}
-                  <input type="file" accept="image/*" multiple onChange={handleImageSelection} className="hidden" />
-                </label>
-              </div>
-
-              {productImages.length ? (
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  {productImages.map((image, index) => (
-                    <div key={`${image.slice(0, 24)}-${index}`} className="rounded-[1.25rem] bg-white/90 p-3 shadow-sm">
-                      <img src={image} alt={`Product preview ${index + 1}`} className="h-28 w-full rounded-[1rem] object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setProductImages((current) => current.filter((_, imageIndex) => imageIndex !== index))}
-                        className="button-secondary mt-3 w-full !py-2"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="mt-4 rounded-[1.25rem] bg-rosewater px-4 py-3 text-sm text-rosewood/75">
-                  No product images selected yet.
-                </div>
-              )}
-            </div>
-
-            <textarea
-              name="tags"
-              defaultValue={currentProduct.tags.join(", ")}
-              placeholder="Tags separated by commas"
-              className="min-h-20 rounded-[1rem] border bg-white/90 px-4 py-3 text-sm"
-            />
-            <textarea
-              name="specifications"
-              defaultValue={currentProduct.specifications.join("\n")}
-              placeholder="Specifications, one per line"
-              className="min-h-20 rounded-[1rem] border bg-white/90 px-4 py-3 text-sm"
-            />
-            <textarea
-              name="customisationNotes"
-              defaultValue={currentProduct.customisationNotes}
-              placeholder="Customization notes"
-              className="min-h-20 rounded-[1rem] border bg-white/90 px-4 py-3 text-sm sm:col-span-2"
-            />
-            <label className="flex items-center gap-2 rounded-[1rem] border bg-white/90 px-4 py-3 text-sm text-rosewood">
-              <input name="isFeatured" type="checkbox" value="true" defaultChecked={currentProduct.isFeatured} />
-              Featured product
-            </label>
-            <label className="flex items-center gap-2 rounded-[1rem] border bg-white/90 px-4 py-3 text-sm text-rosewood">
-              <input name="isActive" type="checkbox" value="true" defaultChecked={currentProduct.isActive} />
-              Visible in store
-            </label>
-            <button type="submit" disabled={savingProduct} className="button-primary sm:col-span-2">
-              {savingProduct ? "Saving product..." : editingProduct ? "Update product" : "Add product"}
-            </button>
-          </form>
-        </div>
-
-        <div className="space-y-6">
-          <div className="glass-panel rounded-[2rem] border border-white/70 p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Inventory</p>
-                <h2 className="mt-2 font-serif text-3xl text-cocoa">{data.products.length} products in dashboard</h2>
-              </div>
-              <span className="rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-rosewood">
-                Live catalogue
-              </span>
-            </div>
-            <div className="mt-6 space-y-4">
-              {data.products.map((product) => (
-                <div key={product._id} className="rounded-[1.75rem] bg-white/85 p-4">
-                  <div className="flex flex-col gap-4 sm:flex-row">
-                    <img src={product.images[0]} alt={product.name} className="h-24 w-full rounded-[1.25rem] object-cover sm:w-24" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="font-serif text-2xl text-cocoa">{product.name}</p>
-                          <p className="mt-1 line-clamp-2 text-sm text-rosewood/75">{product.shortDescription}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-base font-semibold text-cocoa">{formatCurrency(product.price)}</p>
-                          {product.compareAtPrice ? (
-                            <p className="text-xs text-rosewood/60 line-through">{formatCurrency(product.compareAtPrice)}</p>
-                          ) : null}
-                        </div>
+          <div className="mt-6 space-y-4">
+            {data.products.map((product) => (
+              <div key={product._id} className="rounded-[1.75rem] bg-white/85 p-4">
+                <div className="flex flex-col gap-4 sm:flex-row">
+                  <img src={product.images[0]} alt={product.name} className="h-24 w-full rounded-[1.25rem] object-cover sm:w-24" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-serif text-2xl text-cocoa">{product.name}</p>
+                        <p className="mt-1 text-xs text-rosewood/60">/{product.slug}</p>
+                        <p className="mt-2 line-clamp-2 text-sm text-rosewood/75">{product.shortDescription}</p>
                       </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-rosewater px-3 py-1 text-xs font-semibold text-rosewood">{product.category}</span>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-rosewood">
-                          {product.stock} in stock
-                        </span>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-rosewood">
-                          {product.isActive ? "Live" : "Hidden"}
-                        </span>
-                        {product.isFeatured ? (
-                          <span className="rounded-full bg-berry px-3 py-1 text-xs font-semibold text-white">Featured</span>
+                      <div className="text-right">
+                        <p className="text-base font-semibold text-cocoa">{formatCurrency(product.price)}</p>
+                        {product.compareAtPrice ? (
+                          <p className="text-xs text-rosewood/60 line-through">{formatCurrency(product.compareAtPrice)}</p>
                         ) : null}
                       </div>
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setEditingProduct(product)}
-                          className="button-secondary !py-2"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void deleteProduct(product._id)}
-                          disabled={activeDeleteId === product._id}
-                          className="button-secondary !py-2"
-                        >
-                          {activeDeleteId === product._id ? "Deleting..." : "Delete"}
-                        </button>
-                      </div>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-rosewater px-3 py-1 text-xs font-semibold text-rosewood">{product.category}</span>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-rosewood">
+                        {product.stock} in stock
+                      </span>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-rosewood">
+                        {product.isActive ? "Live" : "Hidden"}
+                      </span>
+                      {product.isFeatured ? (
+                        <span className="rounded-full bg-berry px-3 py-1 text-xs font-semibold text-white">Featured</span>
+                      ) : null}
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <button type="button" onClick={() => {
+                        setEditingProduct(product);
+                        setProductFieldErrors({});
+                      }} className="button-secondary !py-2">
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void deleteProduct(product._id)}
+                        disabled={activeDeleteId === product._id}
+                        className="button-secondary !py-2"
+                      >
+                        {activeDeleteId === product._id ? "Deleting..." : "Delete"}
+                      </button>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="glass-panel rounded-[2rem] border border-white/70 p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Orders</p>
-                <h2 className="mt-2 font-serif text-3xl text-cocoa">Track fulfilment</h2>
               </div>
-              <span className="rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-rosewood">
-                {data.orders.length} total
-              </span>
-            </div>
-            <div className="mt-6 space-y-3">
-              {data.orders.map((order) => (
-                <div key={order._id} className="rounded-[1.5rem] bg-white/85 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-cocoa">Order #{order._id.slice(-6).toUpperCase()}</p>
-                      <p className="mt-1 text-sm text-rosewood/70">
-                        {order.customerName} • {formatCurrency(order.total)} • {formatDate(order.createdAt)}
-                      </p>
-                      <p className="mt-1 text-xs uppercase tracking-[0.24em] text-rosewood/55">
-                        {order.itemCount} items
-                      </p>
-                    </div>
-                    <select
-                      value={order.status}
-                      disabled={activeOrderId === order._id}
-                      onChange={(event) => void updateOrderStatus(order._id, event.target.value)}
-                      className="rounded-full border bg-white px-4 py-2 text-sm"
-                    >
-                      {orderStatuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {order.customizationDetails &&
-                  (order.customizationDetails.giftMessage ||
-                    order.customizationDetails.nameCustomization ||
-                    order.customizationDetails.specialInstructions) ? (
-                    <div className="mt-4 grid gap-3 rounded-[1.25rem] bg-rosewater/80 p-4 text-sm text-rosewood/85">
-                      {order.customizationDetails.giftMessage ? (
-                        <p>
-                          <span className="font-semibold text-cocoa">Gift message:</span> {order.customizationDetails.giftMessage}
-                        </p>
-                      ) : null}
-                      {order.customizationDetails.nameCustomization ? (
-                        <p>
-                          <span className="font-semibold text-cocoa">Name customization:</span>{" "}
-                          {order.customizationDetails.nameCustomization}
-                        </p>
-                      ) : null}
-                      {order.customizationDetails.specialInstructions ? (
-                        <p>
-                          <span className="font-semibold text-cocoa">Special instructions:</span>{" "}
-                          {order.customizationDetails.specialInstructions}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
-        </div>
+        </section>
       </div>
+
+      <OrderTable orders={data.orders} activeOrderId={activeOrderId} onStatusChange={(id, status) => void updateOrderStatus(id, status)} />
 
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <div className="glass-panel rounded-[2rem] border border-white/70 p-6">

@@ -27,7 +27,7 @@ export async function GET() {
   }
 
   await connectToDatabase();
-  const orders = await Order.find().sort({ createdAt: -1 }).lean();
+  const orders = await Order.find().sort({ createdAt: -1 }).limit(20).lean();
   return Response.json({
     orders: (orders as any[]).map((order) => ({
       _id: order._id.toString(),
@@ -35,12 +35,34 @@ export async function GET() {
       total: order.total,
       createdAt: new Date(order.createdAt).toISOString(),
       customerName: order.shippingAddress?.fullName ?? "Customer",
+      customerEmail: order.shippingAddress?.email ?? "",
+      paymentStatus: order.payment?.status ?? "pending",
       itemCount: order.items?.length ?? 0,
+      items:
+        order.items?.map((item: any) => ({
+          name: item.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          slug: item.slug
+        })) ?? [],
+      shippingAddress: order.shippingAddress
+        ? {
+            fullName: order.shippingAddress.fullName ?? "",
+            email: order.shippingAddress.email ?? "",
+            phone: order.shippingAddress.phone ?? "",
+            line1: order.shippingAddress.line1 ?? "",
+            line2: order.shippingAddress.line2 ?? "",
+            city: order.shippingAddress.city ?? "",
+            state: order.shippingAddress.state ?? "",
+            postalCode: order.shippingAddress.postalCode ?? "",
+            country: order.shippingAddress.country ?? "India"
+          }
+        : null,
       customizationDetails: order.customizationDetails
         ? {
-            giftMessage: order.customizationDetails.giftMessage ?? "",
-            nameCustomization: order.customizationDetails.nameCustomization ?? "",
-            specialInstructions: order.customizationDetails.specialInstructions ?? ""
+          giftMessage: order.customizationDetails.giftMessage ?? "",
+          nameCustomization: order.customizationDetails.nameCustomization ?? "",
+          specialInstructions: order.customizationDetails.specialInstructions ?? ""
           }
         : null
     }))

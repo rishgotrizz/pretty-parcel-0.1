@@ -9,20 +9,39 @@ import { connectToDatabase } from "@/lib/server/db";
 import { slugify } from "@/lib/utils";
 
 const baseProductSchema = z.object({
-  name: z.string().min(2),
-  category: z.string().min(2),
-  shortDescription: z.string().min(12).max(160),
-  description: z.string().min(20),
-  price: z.coerce.number().min(0),
-  compareAtPrice: z.coerce.number().min(0).optional(),
-  stock: z.coerce.number().int().min(0),
-  images: z.array(z.string().min(1)).min(1),
+  name: z
+    .string({ required_error: "Product name is required." })
+    .trim()
+    .min(3, "Product name must be at least 3 characters."),
+  slug: z
+    .string()
+    .trim()
+    .min(3, "Slug must be at least 3 characters.")
+    .optional()
+    .or(z.literal("")),
+  category: z
+    .string({ required_error: "Category is required." })
+    .trim()
+    .min(2, "Category is required."),
+  shortDescription: z
+    .string({ required_error: "Short description is required." })
+    .trim()
+    .min(10, "Short description must be at least 10 characters.")
+    .max(160, "Short description must be 160 characters or less."),
+  description: z
+    .string({ required_error: "Description is required." })
+    .trim()
+    .min(10, "Description must be at least 10 characters."),
+  price: z.coerce.number().min(0, "Selling price must be 0 or greater."),
+  compareAtPrice: z.coerce.number().min(0, "MRP must be 0 or greater.").optional(),
+  stock: z.coerce.number().int().min(0, "Stock must be 0 or greater."),
+  images: z.array(z.string().min(1)).min(1, "Upload at least one product image."),
   tags: z.array(z.string()).default([]),
   specifications: z.array(z.string()).default([]),
   customisationNotes: z.string().optional(),
   isFeatured: z.boolean().default(false),
   isActive: z.boolean().default(true),
-  flashSalePrice: z.coerce.number().positive().optional(),
+  flashSalePrice: z.coerce.number().positive("Flash sale price must be greater than 0.").optional(),
   flashSaleEndsAt: z.string().optional()
 });
 
@@ -110,6 +129,7 @@ function toOptionalNumber(value: unknown) {
 function normaliseProductPayload(payload: Record<string, unknown>) {
   return {
     name: String(payload.name ?? ""),
+    slug: String(payload.slug ?? "").trim() || undefined,
     category: String(payload.category ?? ""),
     shortDescription: String(payload.shortDescription ?? ""),
     description: String(payload.description ?? ""),
@@ -127,8 +147,8 @@ function normaliseProductPayload(payload: Record<string, unknown>) {
   };
 }
 
-async function buildUniqueSlug(name: string, currentId?: string) {
-  const baseSlug = slugify(name);
+async function buildUniqueSlug(source: string, currentId?: string) {
+  const baseSlug = slugify(source);
   let candidate = baseSlug;
   let suffix = 2;
 
@@ -140,6 +160,16 @@ async function buildUniqueSlug(name: string, currentId?: string) {
     candidate = `${baseSlug}-${suffix}`;
     suffix += 1;
   }
+}
+
+function buildFieldErrors(error: z.ZodError) {
+  return error.issues.reduce<Record<string, string>>((acc, issue) => {
+    const field = String(issue.path[0] ?? "form");
+    if (!acc[field]) {
+      acc[field] = issue.message;
+    }
+    return acc;
+  }, {});
 }
 
 function buildFlashSale(data: z.infer<typeof productSchema>) {
@@ -192,6 +222,7 @@ function serialiseProduct(product: any) {
     shortDescription: product.shortDescription,
     description: product.description,
     stock: product.stock,
+    slug: product.slug,
     price: product.price,
     compareAtPrice: product.compareAtPrice,
     images: product.images ?? [],
@@ -228,11 +259,17 @@ export async function POST(request: Request) {
     const rawPayload = await parseJsonBody<Record<string, unknown>>(request);
     const parsed = productSchema.safeParse(normaliseProductPayload(rawPayload));
     if (!parsed.success) {
-      return Response.json({ error: parsed.error.issues[0]?.message ?? "Invalid product payload." }, { status: 400 });
+      return Response.json(
+        {
+          error: "Please review the highlighted product fields.",
+          fieldErrors: buildFieldErrors(parsed.error)
+        },
+        { status: 400 }
+      );
     }
 
     await connectToDatabase();
-    const slug = await buildUniqueSlug(parsed.data.name);
+    const slug = await buildUniqueSlug(parsed.data.slug || parsed.data.name);
     const product = await Product.create({
       ...buildProductWritePayload(parsed.data, slug),
       popularity: 60,
@@ -263,7 +300,13 @@ export async function PATCH(request: Request) {
       ...normaliseProductPayload(rawPayload)
     });
     if (!parsed.success) {
-      return Response.json({ error: parsed.error.issues[0]?.message ?? "Invalid product payload." }, { status: 400 });
+      return Response.json(
+        {
+          error: "Please review the highlighted product fields.",
+          fieldErrors: buildFieldErrors(parsed.error)
+        },
+        { status: 400 }
+      );
     }
     if (!isObjectId(parsed.data.id)) {
       return Response.json({ error: "Invalid product id." }, { status: 400 });
@@ -275,7 +318,7 @@ export async function PATCH(request: Request) {
       return Response.json({ error: "Product not found." }, { status: 404 });
     }
 
-    const slug = await buildUniqueSlug(parsed.data.name, parsed.data.id);
+    const slug = await buildUniqueSlug(parsed.data.slug || parsed.data.name, parsed.data.id);
     const updatedProduct = await Product.findByIdAndUpdate(parsed.data.id, {
       ...buildProductWritePayload(parsed.data, slug)
     }, { new: true, runValidators: true });
