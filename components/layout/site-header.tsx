@@ -34,9 +34,10 @@ export function SiteHeader() {
           const raw = await response.text();
           return raw ? JSON.parse(raw) : {};
         })
-        .then((data) =>
-          setCartCount(data.items?.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0) ?? 0)
-        )
+        .then((data) => {
+          const items = Array.isArray(data?.items ?? data?.data?.items) ? (data?.items ?? data?.data?.items) : [];
+          setCartCount(items.reduce((sum: number, item: { quantity?: number }) => sum + (item?.quantity ?? 0), 0));
+        })
         .catch(() => setCartCount(0));
     };
 
@@ -69,7 +70,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-white/60 bg-white/65 backdrop-blur-xl">
       <div className="section-shell flex items-center justify-between gap-4 py-4">
         <Link href="/" className="flex items-center gap-3">
-          {branding.logoUrl ? (
+          {branding?.logoUrl ? (
             <div className="story-ring flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white text-berry">
               <img src={branding.logoUrl} alt="The Pretty Parcel logo" className="h-full w-full object-cover" />
             </div>

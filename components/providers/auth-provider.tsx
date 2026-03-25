@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       const raw = await response.text();
       const data = raw ? JSON.parse(raw) : {};
-      setUser(data.user ?? null);
+      setUser((data?.data?.user ?? data?.user ?? null) as AuthUser | null);
     } catch (error) {
       console.error("[AuthProvider] refresh failed", error);
       setUser(null);

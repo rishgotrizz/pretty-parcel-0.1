@@ -748,7 +748,7 @@ export function AdminDashboard() {
             {data.products.map((product) => (
               <div key={product._id} className="rounded-[1.75rem] bg-white/85 p-4">
                 <div className="flex flex-col gap-4 sm:flex-row">
-                  <img src={product.images[0]} alt={product.name} className="h-24 w-full rounded-[1.25rem] object-cover sm:w-24" />
+                  <img src={product.images?.[0] || "/hero-pretty-parcel.svg"} alt={product.name || "Product"} className="h-24 w-full rounded-[1.25rem] object-cover sm:w-24" />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">

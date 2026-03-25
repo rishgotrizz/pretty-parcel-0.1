@@ -36,12 +36,16 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       });
       const raw = await response.text();
       const data = raw ? JSON.parse(raw) : {};
+      const brandingData = data?.branding ?? data?.data?.branding ?? {};
       setBranding({
-        logoUrl: data.branding?.logoUrl ?? "",
-        heroImageUrl: data.branding?.heroImageUrl ?? "",
-        faviconUrl: data.branding?.faviconUrl ?? "",
-        whatsNewText: data.branding?.whatsNewText ?? "",
-        storeMoodText: data.branding?.storeMoodText ?? "Soft, premium gifting with a polished premium feel."
+        logoUrl: typeof brandingData?.logoUrl === "string" ? brandingData.logoUrl : "",
+        heroImageUrl: typeof brandingData?.heroImageUrl === "string" ? brandingData.heroImageUrl : "",
+        faviconUrl: typeof brandingData?.faviconUrl === "string" ? brandingData.faviconUrl : "",
+        whatsNewText: typeof brandingData?.whatsNewText === "string" ? brandingData.whatsNewText : "",
+        storeMoodText:
+          typeof brandingData?.storeMoodText === "string" && brandingData.storeMoodText.trim()
+            ? brandingData.storeMoodText
+            : "Soft, premium gifting with a polished premium feel."
       });
     } catch (error) {
       console.error("[BrandProvider] refresh failed", error);

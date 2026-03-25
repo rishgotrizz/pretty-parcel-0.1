@@ -18,14 +18,16 @@ export default async function ProductDetailPage({
 
   const liveSale =
     product.flashSale?.isActive && new Date(product.flashSale.endsAt) > new Date() ? product.flashSale.price : null;
+  const productImages = Array.isArray(product?.images) && product.images.length ? product.images : ["/hero-pretty-parcel.svg"];
+  const productSpecifications = Array.isArray(product?.specifications) ? product.specifications : [];
 
   return (
     <div className="section-shell grid gap-10 py-8 sm:py-12 lg:grid-cols-[1fr_0.95fr]">
       <div className="space-y-5">
-        <img src={product.images[0]} alt={product.name} className="h-[320px] w-full rounded-[2.5rem] object-cover shadow-glow sm:h-[460px]" />
+        <img src={productImages[0]} alt={product?.name || "The Pretty Parcel product"} className="h-[320px] w-full rounded-[2.5rem] object-cover shadow-glow sm:h-[460px]" />
         <div className="grid gap-4 sm:grid-cols-2">
-          {product.images.map((image) => (
-            <img key={image} src={image} alt={product.name} className="h-44 w-full rounded-[1.75rem] object-cover" />
+          {productImages.map((image) => (
+            <img key={image} src={image} alt={product?.name || "The Pretty Parcel product"} className="h-44 w-full rounded-[1.75rem] object-cover" />
           ))}
         </div>
       </div>
@@ -51,7 +53,7 @@ export default async function ProductDetailPage({
         <div className="glass-panel rounded-[2rem] p-6">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Why it feels premium</p>
           <ul className="mt-4 space-y-3 text-sm leading-7 text-rosewood/85">
-            {product.specifications.map((item) => (
+            {productSpecifications.map((item) => (
               <li key={item}>• {item}</li>
             ))}
           </ul>

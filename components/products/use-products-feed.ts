@@ -38,10 +38,11 @@ export function useProductsFeed(): ProductsFeed {
       });
       const raw = await response.text();
       const data = raw ? JSON.parse(raw) : {};
+      const payload = data?.data ?? data ?? {};
 
-      setProducts(Array.isArray(data.products) ? data.products : []);
-      setCategories(Array.isArray(data.categories) ? data.categories : []);
-      setSpecialCategoryTitle(typeof data.specialCategoryTitle === "string" ? data.specialCategoryTitle : "Special Picks");
+      setProducts(Array.isArray(payload.products) ? payload.products : []);
+      setCategories(Array.isArray(payload.categories) ? payload.categories : []);
+      setSpecialCategoryTitle(typeof payload.specialCategoryTitle === "string" ? payload.specialCategoryTitle : "Special Picks");
     } catch (error) {
       console.error("[useProductsFeed] load failed", error);
       setProducts([]);

@@ -21,6 +21,9 @@ export async function GET() {
   const settings = await getSettings();
   return Response.json({
     success: true,
+    data: {
+      branding: settings ?? {}
+    },
     branding: settings ?? {
       logoUrl: "",
       heroImageUrl: "",
@@ -54,6 +57,9 @@ export async function PATCH(request: Request) {
 
     return Response.json({
       success: true,
+      data: {
+        branding
+      },
       branding
     });
   } catch (error) {

@@ -22,6 +22,8 @@ export function ProductsExplorer({
   products: ProductType[];
   categories: string[];
 }) {
+  const safeProducts = Array.isArray(products) ? products : [];
+  const safeCategories = Array.isArray(categories) ? categories : [];
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("featured");
@@ -44,20 +46,23 @@ export function ProductsExplorer({
         const raw = await response.text();
         return raw ? JSON.parse(raw) : {};
       })
-      .then((data) => setSuggestions(data.suggestions ?? []))
+      .then((data) => {
+        const nextSuggestions = data?.suggestions ?? data?.data?.suggestions;
+        setSuggestions(Array.isArray(nextSuggestions) ? nextSuggestions : []);
+      })
       .catch(() => setSuggestions([]));
 
     return () => controller.abort();
   }, [deferredQuery]);
 
-  const filteredProducts = products
+  const filteredProducts = safeProducts
     .filter((product) => (category === "All" ? true : product.category === category))
     .filter((product) => product.price <= maxPrice)
     .filter((product) => {
       if (!deferredQuery.trim()) {
         return true;
       }
-      const haystack = `${product.name} ${product.description} ${product.tags.join(" ")}`.toLowerCase();
+      const haystack = `${product?.name ?? ""} ${product?.description ?? ""} ${(Array.isArray(product?.tags) ? product.tags : []).join(" ")}`.toLowerCase();
       return haystack.includes(deferredQuery.toLowerCase());
     })
     .sort((a, b) => {
@@ -108,7 +113,7 @@ export function ProductsExplorer({
             className="rounded-full border border-white/70 bg-white/90 px-4 py-3 text-sm outline-none"
           >
             <option value="All">All categories</option>
-            {categories.map((item) => (
+            {safeCategories.map((item) => (
               <option key={item} value={item}>
                 {item}
               </option>

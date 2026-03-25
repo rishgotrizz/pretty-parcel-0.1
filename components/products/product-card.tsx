@@ -7,6 +7,9 @@ import { formatCurrency } from "@/lib/utils";
 import type { ProductType } from "@/types";
 
 export function ProductCard({ product }: { product: ProductType }) {
+  const productImage = product?.images?.[0] || "/hero-pretty-parcel.svg";
+  const productTags = Array.isArray(product?.tags) ? product.tags : [];
+  const productReviews = Array.isArray(product?.reviews) ? product.reviews : [];
   const salePrice =
     product.flashSale?.isActive && new Date(product.flashSale.endsAt) > new Date() ? product.flashSale.price : null;
   const savings = product.compareAtPrice && product.compareAtPrice > (salePrice ?? product.price)
@@ -18,14 +21,14 @@ export function ProductCard({ product }: { product: ProductType }) {
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative overflow-hidden rounded-t-[2rem]">
           <img
-            src={product.images[0]}
-            alt={product.name}
+            src={productImage}
+            alt={product?.name || "The Pretty Parcel product"}
             className="h-72 w-full object-cover transition duration-500 group-hover:scale-[1.04]"
           />
           <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
             <div className="flex flex-wrap gap-2">
               <span className="rounded-full bg-white/95 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-pink-700 shadow-sm">
-                {product.category}
+                {product?.category || "Gift"}
               </span>
               {product.isFeatured ? (
                 <span className="rounded-full bg-pink-500 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
@@ -47,17 +50,19 @@ export function ProductCard({ product }: { product: ProductType }) {
         <div className="flex h-[calc(100%-18rem)] flex-col gap-4 p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-serif text-[1.65rem] leading-tight text-slate-900">{product.name}</h3>
-              <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">{product.shortDescription}</p>
+              <h3 className="font-serif text-[1.65rem] leading-tight text-slate-900">{product?.name || "Pretty Parcel Gift"}</h3>
+              <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">
+                {product?.shortDescription || product?.description || "Handmade gifting, wrapped beautifully."}
+              </p>
             </div>
             <div className="inline-flex shrink-0 items-center gap-1 rounded-full bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700">
               <Star className="h-3.5 w-3.5 fill-pink-400 text-pink-400" />
-              {(product.reviews?.[0]?.rating ?? 4.8).toFixed(1)}
+              {(productReviews?.[0]?.rating ?? 4.8).toFixed(1)}
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {product.tags.slice(0, 2).map((tag) => (
+            {productTags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
                 className="rounded-full bg-pink-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-pink-700"
@@ -70,7 +75,7 @@ export function ProductCard({ product }: { product: ProductType }) {
           <div className="mt-auto flex items-end justify-between gap-3 border-t border-pink-100 pt-4">
             <div className="space-y-1">
               <p className="text-xl font-semibold tracking-[-0.02em] text-slate-900">
-                {formatCurrency(salePrice ?? product.price)}
+                {formatCurrency(salePrice ?? product?.price ?? 0)}
               </p>
               {product.compareAtPrice ? (
                 <p className="text-sm text-slate-400 line-through">{formatCurrency(product.compareAtPrice)}</p>

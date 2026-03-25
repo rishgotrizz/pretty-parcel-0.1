@@ -31,6 +31,20 @@ export function CartView() {
   const [activeProductId, setActiveProductId] = useState("");
   const { pushToast } = useToast();
 
+  function normalizeCart(data: Record<string, any>): CartState {
+    return {
+      items: Array.isArray(data?.items) ? data.items : [],
+      summary: {
+        subtotal: Number(data?.summary?.subtotal ?? 0),
+        discount: Number(data?.summary?.discount ?? 0),
+        shippingFee: Number(data?.summary?.shippingFee ?? 0),
+        total: Number(data?.summary?.total ?? 0)
+      },
+      appliedCoupon: data?.appliedCoupon ?? null,
+      error: typeof data?.error === "string" ? data.error : ""
+    };
+  }
+
   const loadCart = async () => {
     try {
       setLoading(true);
@@ -48,8 +62,9 @@ export function CartView() {
         status: response.status
       });
 
-      setCart(data);
-      if (!data.error) {
+      const normalizedCart = normalizeCart(data);
+      setCart(normalizedCart);
+      if (!normalizedCart.error) {
         window.dispatchEvent(new Event("pretty-parcel-cart-updated"));
       }
     } catch (error) {
@@ -76,12 +91,13 @@ export function CartView() {
         const raw = await response.text();
         return raw ? JSON.parse(raw) : {};
       })
-      .then((data) =>
+      .then((data) => {
+        const settings = data?.settings ?? data?.data?.settings ?? {};
         setShippingSettings({
-          shippingPrice: Number(data.settings?.shippingPrice ?? 149),
-          freeShippingThreshold: Number(data.settings?.freeShippingThreshold ?? 1999)
-        })
-      )
+          shippingPrice: Number(settings?.shippingPrice ?? 149),
+          freeShippingThreshold: Number(settings?.freeShippingThreshold ?? 1999)
+        });
+      })
       .catch((error) => {
         console.error("[CartView] settings load failed", error);
       });
@@ -197,20 +213,20 @@ export function CartView() {
 
       <div className="space-y-5">
         {cart.items.map((item) => (
-          <div key={item.product._id} className="glass-panel flex flex-col gap-4 rounded-[2rem] p-5 sm:flex-row">
-            <img src={item.product.images[0]} alt={item.product.name} className="h-32 w-full rounded-[1.5rem] object-cover sm:w-32" />
+          <div key={item?.product?._id ?? item?.product?.slug ?? `${item?.product?.name ?? "item"}-${item?.quantity ?? 1}`} className="glass-panel flex flex-col gap-4 rounded-[2rem] p-5 sm:flex-row">
+            <img src={item?.product?.images?.[0] || "/hero-pretty-parcel.svg"} alt={item?.product?.name || "Cart item"} className="h-32 w-full rounded-[1.5rem] object-cover sm:w-32" />
             <div className="flex-1">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="font-serif text-2xl text-cocoa">{item.product.name}</h2>
-                  <Link href={`/products/${item.product.slug}`} className="text-sm font-medium text-berry">
+                  <h2 className="font-serif text-2xl text-cocoa">{item?.product?.name || "Pretty Parcel Gift"}</h2>
+                  <Link href={`/products/${item?.product?.slug || ""}`} className="text-sm font-medium text-berry">
                     View product
                   </Link>
                 </div>
                 <button
                   type="button"
-                  disabled={activeProductId === item.product._id}
-                  onClick={() => void removeItem(item.product._id)}
+                  disabled={activeProductId === item?.product?._id}
+                  onClick={() => item?.product?._id ? void removeItem(item.product._id) : undefined}
                   className="rounded-full bg-white/80 p-3 text-rosewood"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -220,23 +236,23 @@ export function CartView() {
                 <div className="inline-flex items-center rounded-full border border-white/70 bg-white/90 p-2">
                   <button
                     type="button"
-                    disabled={activeProductId === item.product._id}
-                    onClick={() => void updateQuantity(item.product._id, Math.max(1, item.quantity - 1))}
+                    disabled={activeProductId === item?.product?._id}
+                    onClick={() => item?.product?._id ? void updateQuantity(item.product._id, Math.max(1, (item?.quantity ?? 1) - 1)) : undefined}
                     className="rounded-full p-2"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
-                  <span className="min-w-10 text-center text-sm font-semibold">{item.quantity}</span>
+                  <span className="min-w-10 text-center text-sm font-semibold">{item?.quantity ?? 1}</span>
                   <button
                     type="button"
-                    disabled={activeProductId === item.product._id}
-                    onClick={() => void updateQuantity(item.product._id, item.quantity + 1)}
+                    disabled={activeProductId === item?.product?._id}
+                    onClick={() => item?.product?._id ? void updateQuantity(item.product._id, (item?.quantity ?? 1) + 1) : undefined}
                     className="rounded-full p-2"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="text-lg font-semibold text-cocoa">{formatCurrency(item.unitPrice * item.quantity)}</p>
+                <p className="text-lg font-semibold text-cocoa">{formatCurrency((item?.unitPrice ?? 0) * (item?.quantity ?? 1))}</p>
               </div>
             </div>
           </div>

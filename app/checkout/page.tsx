@@ -34,6 +34,21 @@ export default function CheckoutPage() {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const { pushToast } = useToast();
 
+  function normalizeCart(data: Record<string, any>): CheckoutCart {
+    return {
+      items: Array.isArray(data?.items) ? data.items : [],
+      summary: {
+        subtotal: Number(data?.summary?.subtotal ?? 0),
+        discount: Number(data?.summary?.discount ?? 0),
+        shippingFee: Number(data?.summary?.shippingFee ?? 0),
+        total: Number(data?.summary?.total ?? 0)
+      },
+      appliedCoupon: data?.appliedCoupon ?? null,
+      availableCoupons: Array.isArray(data?.availableCoupons) ? data.availableCoupons : [],
+      error: typeof data?.error === "string" ? data.error : ""
+    };
+  }
+
   async function readJson(response: Response) {
     try {
       const raw = await response.text();
@@ -106,8 +121,9 @@ export default function CheckoutPage() {
           headers: { Accept: "application/json" }
         });
         const data = await readJson(response);
-        setCart(data);
-        setCouponCode(typeof data.appliedCoupon?.code === "string" ? data.appliedCoupon.code : "");
+        const normalizedCart = normalizeCart(data);
+        setCart(normalizedCart);
+        setCouponCode(typeof normalizedCart.appliedCoupon?.code === "string" ? normalizedCart.appliedCoupon.code : "");
       } catch (error) {
         console.error("[CheckoutPage] failed to load cart", error);
         setCart({
@@ -384,7 +400,7 @@ export default function CheckoutPage() {
           <div className="rounded-[1.5rem] bg-white/75 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rosewood/65">Available offers</p>
             <div className="mt-4 space-y-3">
-              {cart.availableCoupons.map((coupon) => (
+              {(cart.availableCoupons ?? []).map((coupon) => (
                 <div key={coupon.code} className="rounded-[1.25rem] bg-white/90 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -439,14 +455,14 @@ export default function CheckoutPage() {
       <aside className="glass-panel rounded-[2rem] p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-rosewood/70">Order summary</p>
         <div className="mt-5 space-y-4">
-          {cart.items.map((item) => (
-            <div key={item.product._id} className="flex items-center gap-4 rounded-[1.5rem] bg-white/80 p-4">
-              <img src={item.product.images[0]} alt={item.product.name} className="h-16 w-16 rounded-2xl object-cover" />
+          {(cart.items ?? []).map((item) => (
+            <div key={item?.product?._id ?? item?.product?.slug ?? `${item?.product?.name ?? "item"}-${item?.quantity ?? 1}`} className="flex items-center gap-4 rounded-[1.5rem] bg-white/80 p-4">
+              <img src={item?.product?.images?.[0] || "/hero-pretty-parcel.svg"} alt={item?.product?.name || "Checkout item"} className="h-16 w-16 rounded-2xl object-cover" />
               <div className="flex-1">
-                <p className="font-medium text-cocoa">{item.product.name}</p>
-                <p className="text-sm text-rosewood/70">Qty {item.quantity}</p>
+                <p className="font-medium text-cocoa">{item?.product?.name || "Pretty Parcel Gift"}</p>
+                <p className="text-sm text-rosewood/70">Qty {item?.quantity ?? 1}</p>
               </div>
-              <p className="text-sm font-semibold text-cocoa">{formatCurrency(item.unitPrice * item.quantity)}</p>
+              <p className="text-sm font-semibold text-cocoa">{formatCurrency((item?.unitPrice ?? 0) * (item?.quantity ?? 1))}</p>
             </div>
           ))}
         </div>
