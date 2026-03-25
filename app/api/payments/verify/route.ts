@@ -186,7 +186,7 @@ export async function POST(request: Request) {
     };
 
     if (inventoryReserved) {
-      lockedOrder.status = "processing";
+      lockedOrder.status = "confirmed";
       lockedOrder.tracking = {
         trackingId: lockedOrder.tracking?.trackingId ?? `PP${String(lockedOrder._id).slice(-8).toUpperCase()}`,
         estimatedDelivery: lockedOrder.tracking?.estimatedDelivery ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 4),
@@ -198,7 +198,7 @@ export async function POST(request: Request) {
             at: now
           },
           {
-            status: "processing",
+            status: "confirmed",
             label: "Artisans are preparing your handmade parcel.",
             at: new Date(Date.now() + 1000 * 60 * 20)
           }
@@ -214,7 +214,7 @@ export async function POST(request: Request) {
       });
     }
 
-    lockedOrder.status = "paid";
+    lockedOrder.status = "confirmed";
     lockedOrder.tracking = {
       ...lockedOrder.tracking,
       timeline: [

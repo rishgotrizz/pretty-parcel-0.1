@@ -3,9 +3,9 @@
 import { useState } from "react";
 
 import { OrderDetailsModal, type AdminOrderRow } from "@/components/admin/order-details-modal";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatOrderStatus } from "@/lib/utils";
 
-const orderStatuses = ["pending", "paid", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"];
+const orderStatuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
 
 function StatusBadge({ label, tone }: { label: string; tone: "rose" | "emerald" | "amber" | "slate" }) {
   const classes =
@@ -36,6 +36,9 @@ function getOrderTone(status: string) {
   }
   if (status === "cancelled") {
     return "amber" as const;
+  }
+  if (status === "confirmed") {
+    return "emerald" as const;
   }
   return "rose" as const;
 }
@@ -99,7 +102,7 @@ export function OrderTable({
                   </td>
                   <td className="px-3 py-4 text-sm font-semibold text-cocoa">{formatCurrency(order.total)}</td>
                   <td className="px-3 py-4">
-                    <StatusBadge label={order.status.replaceAll("_", " ")} tone={getOrderTone(order.status)} />
+                    <StatusBadge label={formatOrderStatus(order.status)} tone={getOrderTone(order.status)} />
                   </td>
                   <td className="px-3 py-4">
                     <StatusBadge label={order.paymentStatus} tone={getPaymentTone(order.paymentStatus)} />

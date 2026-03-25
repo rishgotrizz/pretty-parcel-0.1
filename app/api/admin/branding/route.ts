@@ -8,7 +8,8 @@ const brandingSchema = z.object({
   logoUrl: z.string().trim().optional().or(z.literal("")),
   heroImageUrl: z.string().trim().optional().or(z.literal("")),
   faviconUrl: z.string().trim().optional().or(z.literal("")),
-  whatsNewText: z.string().trim().max(180).optional().or(z.literal(""))
+  whatsNewText: z.string().trim().max(180).optional().or(z.literal("")),
+  storeMoodText: z.string().trim().max(160).optional().or(z.literal(""))
 });
 
 export async function GET() {
@@ -25,6 +26,7 @@ export async function GET() {
       heroImageUrl: "",
       faviconUrl: "",
       whatsNewText: "",
+      storeMoodText: "Soft, premium gifting with a polished premium feel.",
       specialCategoryName: "Special Picks"
     }
   });
@@ -46,7 +48,8 @@ export async function PATCH(request: Request) {
       logoUrl: parsed.data.logoUrl ?? "",
       heroImageUrl: parsed.data.heroImageUrl ?? "",
       faviconUrl: parsed.data.faviconUrl ?? "",
-      whatsNewText: parsed.data.whatsNewText ?? ""
+      whatsNewText: parsed.data.whatsNewText ?? "",
+      storeMoodText: parsed.data.storeMoodText ?? ""
     });
 
     return Response.json({

@@ -7,6 +7,7 @@ export type StoreSettings = {
   heroImageUrl: string;
   faviconUrl: string;
   whatsNewText: string;
+  storeMoodText: string;
   specialCategoryName: string;
 };
 
@@ -15,6 +16,7 @@ const defaultSettings: StoreSettings = {
   heroImageUrl: "",
   faviconUrl: "",
   whatsNewText: "",
+  storeMoodText: "Soft, premium gifting with a polished premium feel.",
   specialCategoryName: "Special Picks"
 };
 
@@ -29,6 +31,7 @@ async function hydrateFromLegacySettings() {
     heroImageUrl: brandingSetting?.value?.heroImageUrl ?? "",
     faviconUrl: brandingSetting?.value?.faviconUrl ?? "",
     whatsNewText: brandingSetting?.value?.whatsNewText ?? "",
+    storeMoodText: brandingSetting?.value?.storeMoodText ?? defaultSettings.storeMoodText,
     specialCategoryName:
       typeof specialCategorySetting?.value === "string" && specialCategorySetting.value.trim()
         ? specialCategorySetting.value
@@ -52,6 +55,7 @@ export async function getSettings(): Promise<StoreSettings> {
       heroImageUrl: settings.heroImageUrl ?? "",
       faviconUrl: settings.faviconUrl ?? "",
       whatsNewText: settings.whatsNewText ?? "",
+      storeMoodText: settings.storeMoodText ?? defaultSettings.storeMoodText,
       specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName
     };
   }
@@ -61,6 +65,7 @@ export async function getSettings(): Promise<StoreSettings> {
     heroImageUrl: settings.heroImageUrl ?? "",
     faviconUrl: settings.faviconUrl ?? "",
     whatsNewText: settings.whatsNewText ?? "",
+    storeMoodText: settings.storeMoodText ?? defaultSettings.storeMoodText,
     specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName
   };
 }
@@ -85,6 +90,7 @@ export async function updateSettings(input: Partial<StoreSettings>): Promise<Sto
     heroImageUrl: settings.heroImageUrl ?? "",
     faviconUrl: settings.faviconUrl ?? "",
     whatsNewText: settings.whatsNewText ?? "",
+    storeMoodText: settings.storeMoodText ?? defaultSettings.storeMoodText,
     specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName
   };
 }

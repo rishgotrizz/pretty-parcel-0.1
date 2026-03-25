@@ -14,7 +14,6 @@ import {
 } from "@/lib/server/pricing";
 import { getRecommendationsForUser } from "@/lib/server/recommendations";
 import { getSettings } from "@/lib/server/settings";
-import { sampleProducts, sampleCategories } from "@/lib/server/sample-data";
 import type { ProductType } from "@/types";
 
 type SerializedOrder = {
@@ -84,20 +83,15 @@ function normaliseProduct(product: Record<string, any>): ProductType {
   } as ProductType;
 }
 
-function canUseSampleFallback() {
-  return process.env.NODE_ENV !== "production";
-}
-
 export async function getCatalogProducts(): Promise<ProductType[]> {
   try {
     await connectToDatabase();
-    const products = await Product.find({ isActive: true }).sort({ isFeatured: -1, popularity: -1 }).lean();
-    if (!products.length && canUseSampleFallback()) {
-      return sampleProducts;
-    }
+    const products = await Product.find({ isActive: true, isDeleted: { $ne: true } })
+      .sort({ isFeatured: -1, popularity: -1, createdAt: -1 })
+      .lean();
     return (products as any[]).map((product) => normaliseProduct(product as Record<string, any>));
   } catch {
-    return canUseSampleFallback() ? sampleProducts : [];
+    return [];
   }
 }
 
@@ -109,10 +103,11 @@ export async function getSpecialCategoryTitle() {
 export async function getBrandAssets() {
   const settings = await getSettings();
   return {
-    logoUrl: settings.logoUrl,
-    heroImageUrl: settings.heroImageUrl,
-    faviconUrl: settings.faviconUrl,
-    whatsNewText: settings.whatsNewText
+      logoUrl: settings.logoUrl,
+      heroImageUrl: settings.heroImageUrl,
+      faviconUrl: settings.faviconUrl,
+      whatsNewText: settings.whatsNewText,
+      storeMoodText: settings.storeMoodText
   };
 }
 
@@ -144,20 +139,29 @@ export async function getHomePageData(userId?: string | null): Promise<{
     featured,
     flashSale,
     recommendations,
-    categories: sampleCategories
+    categories: [...new Set(products.map((product) => product.category).filter(Boolean))]
   };
 }
 
-export async function getProductBySlug(slug: string): Promise<ProductType | null> {
+export async function getProductBySlug(
+  slug: string,
+  options?: { incrementView?: boolean }
+): Promise<ProductType | null> {
   try {
     await connectToDatabase();
-    const product = await Product.findOne({ slug, isActive: true }).lean();
+    const product = options?.incrementView
+      ? await Product.findOneAndUpdate(
+          { slug, isActive: true, isDeleted: { $ne: true } },
+          { $inc: { views: 1, popularity: 1 } },
+          { new: true }
+        ).lean()
+      : await Product.findOne({ slug, isActive: true, isDeleted: { $ne: true } }).lean();
     if (!product) {
-      return canUseSampleFallback() ? (sampleProducts.find((item: any) => item.slug === slug) ?? null) : null;
+      return null;
     }
     return normaliseProduct(product as Record<string, any>);
   } catch {
-    return canUseSampleFallback() ? (sampleProducts.find((item: any) => item.slug === slug) ?? null) : null;
+    return null;
   }
 }
 
@@ -223,10 +227,10 @@ export async function getWishlistProducts(productIds: string[]): Promise<Product
     const objectIds = productIds
       .filter((id) => Types.ObjectId.isValid(id))
       .map((id) => new Types.ObjectId(id));
-    const products = await Product.find({ _id: { $in: objectIds }, isActive: true }).lean();
+    const products = await Product.find({ _id: { $in: objectIds }, isActive: true, isDeleted: { $ne: true } }).lean();
     return (products as any[]).map((product) => normaliseProduct(product as Record<string, any>));
   } catch {
-    return canUseSampleFallback() ? sampleProducts.filter((product: any) => productIds.includes(product._id ?? "")) : [];
+    return [];
   }
 }
 

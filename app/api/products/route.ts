@@ -2,5 +2,6 @@ import { getCatalogProducts, getSpecialCategoryTitle } from "@/lib/server/storef
 
 export async function GET() {
   const [products, specialCategoryTitle] = await Promise.all([getCatalogProducts(), getSpecialCategoryTitle()]);
-  return Response.json({ products, specialCategoryTitle });
+  const categories = [...new Set(products.map((product) => product.category).filter(Boolean))];
+  return Response.json({ products, categories, specialCategoryTitle });
 }

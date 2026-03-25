@@ -201,6 +201,7 @@ function buildProductWritePayload(data: z.infer<typeof productSchema>, slug: str
     category: data.category,
     tags: data.tags.length ? data.tags : [data.category.toLowerCase(), "handmade"],
     stock: data.stock,
+    isDeleted: false,
     isFeatured: data.isFeatured,
     isSpecial: data.isSpecial,
     isActive: data.isActive,
@@ -228,6 +229,7 @@ function serialiseProduct(product: any) {
     slug: product.slug,
     price: product.price,
     compareAtPrice: product.compareAtPrice,
+    views: product.views ?? 0,
     images: product.images ?? [],
     tags: product.tags ?? [],
     specifications: product.specifications ?? [],
@@ -235,6 +237,7 @@ function serialiseProduct(product: any) {
     isFeatured: Boolean(product.isFeatured),
     isSpecial: Boolean(product.isSpecial),
     isActive: Boolean(product.isActive),
+    isDeleted: Boolean(product.isDeleted),
     flashSalePrice: product.flashSale?.isActive ? product.flashSale?.price : undefined,
     flashSaleEndsAt: product.flashSale?.endsAt ? new Date(product.flashSale.endsAt).toISOString().slice(0, 16) : ""
   };
@@ -247,7 +250,7 @@ export async function GET() {
   }
 
   await connectToDatabase();
-  const products = await Product.find().sort({ createdAt: -1 }).lean();
+  const products = await Product.find({ isDeleted: { $ne: true } }).sort({ createdAt: -1 }).lean();
   return Response.json({
     products: (products as any[]).map((product) => serialiseProduct(product))
   });
@@ -352,7 +355,16 @@ export async function DELETE(request: Request) {
 
   try {
     await connectToDatabase();
-    const deletedProduct = await Product.findByIdAndDelete(id);
+    const deletedProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          isDeleted: true,
+          isActive: false
+        }
+      },
+      { new: true }
+    );
     if (!deletedProduct) {
       return Response.json({ error: "Product not found." }, { status: 404 });
     }

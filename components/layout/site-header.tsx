@@ -79,7 +79,7 @@ export function SiteHeader() {
           )}
           <div>
             <p className="font-serif text-2xl leading-none text-cocoa">The Pretty Parcel</p>
-            <p className="text-xs uppercase tracking-[0.28em] text-rosewood/70">Handmade gifting studio</p>
+            <p className="text-[11px] tracking-[0.18em] text-rosewood/70">alot of 💗 by prachi</p>
           </div>
         </Link>
 

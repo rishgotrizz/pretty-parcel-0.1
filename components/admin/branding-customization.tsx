@@ -11,13 +11,15 @@ type BrandingState = {
   heroImageUrl: string;
   faviconUrl: string;
   whatsNewText: string;
+  storeMoodText: string;
 };
 
 const emptyBranding: BrandingState = {
   logoUrl: "",
   heroImageUrl: "",
   faviconUrl: "",
-  whatsNewText: ""
+  whatsNewText: "",
+  storeMoodText: "Soft, premium gifting with a polished premium feel."
 };
 
 async function fileToDataUrl(file: File) {
@@ -87,7 +89,8 @@ export function BrandingCustomization() {
           logoUrl: data.branding?.logoUrl ?? "",
           heroImageUrl: data.branding?.heroImageUrl ?? "",
           faviconUrl: data.branding?.faviconUrl ?? "",
-          whatsNewText: data.branding?.whatsNewText ?? ""
+          whatsNewText: data.branding?.whatsNewText ?? "",
+          storeMoodText: data.branding?.storeMoodText ?? "Soft, premium gifting with a polished premium feel."
         });
       } catch (error) {
         console.error("[BrandingCustomization] load failed", error);
@@ -121,7 +124,8 @@ export function BrandingCustomization() {
         logoUrl: data.branding?.logoUrl ?? "",
         heroImageUrl: data.branding?.heroImageUrl ?? "",
         faviconUrl: data.branding?.faviconUrl ?? "",
-        whatsNewText: data.branding?.whatsNewText ?? ""
+        whatsNewText: data.branding?.whatsNewText ?? "",
+        storeMoodText: data.branding?.storeMoodText ?? "Soft, premium gifting with a polished premium feel."
       });
       await refreshBranding();
       pushToast("Brand customization saved.", "success");
@@ -161,6 +165,16 @@ export function BrandingCustomization() {
               value={branding.whatsNewText}
               onChange={(event) => setBranding((current) => ({ ...current, whatsNewText: event.target.value }))}
               placeholder="Fresh bouquet drops and portrait slots are now open for April gifting."
+              className="min-h-24 w-full rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
+            />
+          </div>
+
+          <div className="mt-6">
+            <label className="mb-2 block text-sm font-semibold text-cocoa">Store Mood Text</label>
+            <textarea
+              value={branding.storeMoodText}
+              onChange={(event) => setBranding((current) => ({ ...current, storeMoodText: event.target.value }))}
+              placeholder="Soft, premium gifting with a polished premium feel."
               className="min-h-24 w-full rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
             />
           </div>

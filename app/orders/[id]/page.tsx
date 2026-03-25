@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/server/auth";
 import { getOrderByIdForUser } from "@/lib/server/storefront";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatOrderStatus, normalizeOrderStatus } from "@/lib/utils";
 
 export default async function OrderDetailPage({
   params
@@ -21,11 +21,29 @@ export default async function OrderDetailPage({
     notFound();
   }
 
+  const orderStatus = normalizeOrderStatus(order.status);
+  const statusSteps = ["pending", "confirmed", "shipped", "delivered"];
+  const activeStepIndex = statusSteps.indexOf(orderStatus);
+
   return (
     <div className="section-shell grid gap-8 py-12 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="glass-panel rounded-[2rem] p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-rosewood/70">Order tracking</p>
         <h1 className="mt-3 font-serif text-4xl text-cocoa">Order #{order._id.slice(-6).toUpperCase()}</h1>
+        <div className="mt-6 rounded-[1.5rem] bg-white/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rosewood/60">Current status</p>
+          <p className="mt-2 text-lg font-semibold capitalize text-cocoa">{formatOrderStatus(orderStatus)}</p>
+          <div className="mt-4 grid grid-cols-4 gap-2">
+            {statusSteps.map((step, index) => (
+              <div key={step} className="space-y-2">
+                <div className={`h-2 rounded-full ${index <= activeStepIndex ? "bg-pink-500" : "bg-pink-100"}`} />
+                <p className={`text-[11px] uppercase tracking-[0.18em] ${index <= activeStepIndex ? "text-pink-700" : "text-rosewood/45"}`}>
+                  {step}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="mt-8 space-y-4">
           {order.tracking?.timeline?.map((event: { status: string; label: string; at: string | Date }) => (
             <div key={`${event.status}-${event.at}`} className="rounded-[1.5rem] bg-white/80 p-4">
@@ -45,7 +63,7 @@ export default async function OrderDetailPage({
           </div>
           <div className="flex items-center justify-between">
             <span>Status</span>
-            <span>{order.status}</span>
+            <span className="capitalize">{formatOrderStatus(orderStatus)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span>Order date</span>
@@ -109,6 +127,20 @@ export default async function OrderDetailPage({
           Continue shopping
         </Link>
       </aside>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-4 sm:hidden">
+        <div className="pointer-events-auto rounded-[1.5rem] border border-pink-100/80 bg-white/95 p-4 shadow-[var(--shadow-card)] backdrop-blur">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-rosewood/65">Order status</p>
+              <p className="mt-1 text-sm font-semibold capitalize text-cocoa">{formatOrderStatus(orderStatus)}</p>
+            </div>
+            <Link href="/products" className="button-primary !px-5 !py-3">
+              Shop more
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

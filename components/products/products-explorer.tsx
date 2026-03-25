@@ -141,14 +141,14 @@ export function ProductsExplorer({
         </div>
       </div>
 
-      <div className="mt-8 flex items-center justify-between">
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-rosewood/70">{filteredProducts.length} products ready to gift</p>
         <Link href="/cart" className="text-sm font-semibold text-berry">
           Go to cart
         </Link>
       </div>
 
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {filteredProducts.map((product) => (
           <ProductCard key={product.slug} product={product} />
         ))}

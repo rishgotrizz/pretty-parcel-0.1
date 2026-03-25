@@ -12,7 +12,7 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const product = await getProductBySlug(slug, { incrementView: true });
 
   if (!product) {
     notFound();
@@ -22,9 +22,9 @@ export default async function ProductDetailPage({
     product.flashSale?.isActive && new Date(product.flashSale.endsAt) > new Date() ? product.flashSale.price : null;
 
   return (
-    <div className="section-shell grid gap-10 py-12 lg:grid-cols-[1fr_0.95fr]">
+    <div className="section-shell grid gap-10 py-8 sm:py-12 lg:grid-cols-[1fr_0.95fr]">
       <div className="space-y-5">
-        <img src={product.images[0]} alt={product.name} className="h-[460px] w-full rounded-[2.5rem] object-cover shadow-glow" />
+        <img src={product.images[0]} alt={product.name} className="h-[320px] w-full rounded-[2.5rem] object-cover shadow-glow sm:h-[460px]" />
         <div className="grid gap-4 sm:grid-cols-2">
           {product.images.map((image) => (
             <img key={image} src={image} alt={product.name} className="h-44 w-full rounded-[1.75rem] object-cover" />
@@ -37,7 +37,7 @@ export default async function ProductDetailPage({
           <span className="inline-flex rounded-full bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-rosewood/70">
             {product.category}
           </span>
-          <h1 className="font-serif text-5xl text-cocoa">{product.name}</h1>
+          <h1 className="font-serif text-4xl text-cocoa sm:text-5xl">{product.name}</h1>
           <p className="max-w-xl text-base leading-8 text-rosewood/85">{product.description}</p>
           <div className="flex flex-wrap items-center gap-4">
             <p className="text-3xl font-semibold text-cocoa">{formatCurrency(liveSale ?? product.price)}</p>

@@ -3,56 +3,41 @@
 import { useEffect, useState } from "react";
 
 import { HeroSection } from "@/components/home/hero-section";
+import { useProductsFeed } from "@/components/products/use-products-feed";
 import { ProductActions } from "@/components/products/product-actions";
 import { ProductCard } from "@/components/products/product-card";
 import { ReviewsSection } from "@/components/home/reviews-section";
 import { EmptyState } from "@/components/shared/empty-state";
-import type { ProductType, StoreReview } from "@/types";
+import type { StoreReview } from "@/types";
 
 export default function HomePage() {
-  const [products, setProducts] = useState<ProductType[]>([]);
+  const { products, specialCategoryTitle, loading } = useProductsFeed();
   const [reviews, setReviews] = useState<StoreReview[]>([]);
-  const [specialCategoryTitle, setSpecialCategoryTitle] = useState("Special Picks");
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadProducts() {
+    async function loadReviews() {
       try {
-        const [productsResponse, reviewsResponse] = await Promise.all([
-          fetch("/api/products", {
-            cache: "no-store",
-            headers: { Accept: "application/json" }
-          }),
-          fetch("/api/reviews", {
-            cache: "no-store",
-            headers: { Accept: "application/json" }
-          })
-        ]);
-        const [productsRaw, reviewsRaw] = await Promise.all([productsResponse.text(), reviewsResponse.text()]);
-        const data = productsRaw ? JSON.parse(productsRaw) : {};
+        const response = await fetch("/api/reviews", {
+          cache: "no-store",
+          headers: { Accept: "application/json" }
+        });
+        const reviewsRaw = await response.text();
         const reviewsData = reviewsRaw ? JSON.parse(reviewsRaw) : {};
 
         if (!cancelled) {
-          setProducts(Array.isArray(data.products) ? data.products : []);
           setReviews(Array.isArray(reviewsData.reviews) ? reviewsData.reviews : []);
-          setSpecialCategoryTitle(typeof data.specialCategoryTitle === "string" ? data.specialCategoryTitle : "Special Picks");
         }
       } catch (error) {
-        console.error("[HomePage] failed to load products", error);
+        console.error("[HomePage] failed to load reviews", error);
         if (!cancelled) {
-          setProducts([]);
           setReviews([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
         }
       }
     }
 
-    void loadProducts();
+    void loadReviews();
 
     return () => {
       cancelled = true;

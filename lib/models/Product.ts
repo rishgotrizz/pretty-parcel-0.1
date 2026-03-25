@@ -21,10 +21,12 @@ const productSchema = new Schema(
     category: { type: String, required: true, index: true, trim: true },
     tags: [{ type: String, trim: true }],
     stock: { type: Number, required: true, min: 0 },
+    views: { type: Number, default: 0, min: 0, index: true },
     popularity: { type: Number, default: 0, index: true },
     isFeatured: { type: Boolean, default: false },
     isSpecial: { type: Boolean, default: false, index: true },
     isActive: { type: Boolean, default: true },
+    isDeleted: { type: Boolean, default: false, index: true },
     images: {
       type: [{ type: String, trim: true }],
       set(value: string[] | string | null | undefined) {

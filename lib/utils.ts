@@ -36,3 +36,17 @@ export function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
+
+export function normalizeOrderStatus(status: string) {
+  if (status === "paid" || status === "processing") {
+    return "confirmed";
+  }
+  if (status === "out_for_delivery") {
+    return "shipped";
+  }
+  return status;
+}
+
+export function formatOrderStatus(status: string) {
+  return normalizeOrderStatus(status).replaceAll("_", " ");
+}

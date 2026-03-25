@@ -7,6 +7,7 @@ const settingsSchema = new Schema(
     heroImageUrl: { type: String, trim: true, default: "" },
     faviconUrl: { type: String, trim: true, default: "" },
     whatsNewText: { type: String, trim: true, default: "" },
+    storeMoodText: { type: String, trim: true, default: "Soft, premium gifting with a polished premium feel." },
     specialCategoryName: { type: String, trim: true, default: "Special Picks" }
   },
   {

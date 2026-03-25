@@ -12,23 +12,23 @@ export function HeroSection({ flashSaleEndsAt }: { flashSaleEndsAt?: string }) {
   const { branding } = useBranding();
 
   return (
-    <section className="pt-4 sm:pt-8">
-      <div className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
-        <div className="animate-rise space-y-7">
+    <section className="pt-2 sm:pt-8">
+      <div className="grid items-center gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+        <div className="animate-rise space-y-6 sm:space-y-7">
           <div className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-pink-700 shadow-sm">
             <Instagram className="h-4 w-4" />
             Instagram-born, website-ready gifting
           </div>
           <div className="space-y-4">
-            <h1 className="max-w-3xl font-serif text-5xl leading-[0.92] text-slate-900 sm:text-6xl lg:text-7xl">
+            <h1 className="max-w-3xl font-serif text-4xl leading-[0.94] text-slate-900 sm:text-6xl lg:text-7xl">
               Premium gifting, wrapped in soft pink elegance.
             </h1>
-            <p className="max-w-xl text-base leading-8 text-slate-500 sm:text-lg">
+            <p className="max-w-xl text-sm leading-7 text-slate-500 sm:text-lg sm:leading-8">
               Handmade bouquets, portraits, keychains, scrapbooks, and keepsakes designed for thoughtful moments and
               premium unboxing joy.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3 pt-1">
+          <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:flex-wrap sm:items-center">
             <Button href="/products">
               Explore gifts
             </Button>
@@ -61,7 +61,7 @@ export function HeroSection({ flashSaleEndsAt }: { flashSaleEndsAt?: string }) {
             />
             <div className="mt-4 rounded-[1.75rem] border border-white/80 bg-white/90 p-5 shadow-sm sm:absolute sm:bottom-8 sm:left-8 sm:mt-0 sm:max-w-xs">
               <p className="text-xs font-semibold uppercase tracking-[0.26em] text-pink-700/70">Store mood</p>
-              <p className="mt-2 font-serif text-2xl text-slate-900">Soft, premium gifting with a polished premium feel.</p>
+              <p className="mt-2 font-serif text-2xl text-slate-900">{branding.storeMoodText}</p>
             </div>
           </Card>
         </div>

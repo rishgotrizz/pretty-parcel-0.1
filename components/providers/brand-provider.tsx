@@ -7,6 +7,7 @@ type BrandAssets = {
   heroImageUrl: string;
   faviconUrl: string;
   whatsNewText: string;
+  storeMoodText: string;
 };
 
 type BrandContextValue = {
@@ -20,7 +21,8 @@ const defaultBranding: BrandAssets = {
   logoUrl: "",
   heroImageUrl: "",
   faviconUrl: "",
-  whatsNewText: ""
+  whatsNewText: "",
+  storeMoodText: "Soft, premium gifting with a polished premium feel."
 };
 
 export function BrandProvider({ children }: { children: React.ReactNode }) {
@@ -38,7 +40,8 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
         logoUrl: data.branding?.logoUrl ?? "",
         heroImageUrl: data.branding?.heroImageUrl ?? "",
         faviconUrl: data.branding?.faviconUrl ?? "",
-        whatsNewText: data.branding?.whatsNewText ?? ""
+        whatsNewText: data.branding?.whatsNewText ?? "",
+        storeMoodText: data.branding?.storeMoodText ?? "Soft, premium gifting with a polished premium feel."
       });
     } catch (error) {
       console.error("[BrandProvider] refresh failed", error);

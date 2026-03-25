@@ -155,7 +155,7 @@ export function CartView() {
   }
 
   return (
-    <div className="section-shell grid gap-8 py-12 lg:grid-cols-[1.3fr_0.7fr]">
+    <div className="section-shell grid gap-8 py-8 pb-28 sm:py-12 lg:grid-cols-[1.3fr_0.7fr] lg:pb-12">
       <div className="space-y-5">
         {cart.items.map((item) => (
           <div key={item.product._id} className="glass-panel flex flex-col gap-4 rounded-[2rem] p-5 sm:flex-row">
@@ -177,7 +177,7 @@ export function CartView() {
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
-              <div className="mt-5 flex items-center justify-between gap-4">
+              <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="inline-flex items-center rounded-full border border-white/70 bg-white/90 p-2">
                   <button
                     type="button"
@@ -233,6 +233,20 @@ export function CartView() {
           Continue to checkout
         </Link>
       </aside>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-4 lg:hidden">
+        <div className="pointer-events-auto rounded-[1.5rem] border border-pink-100/80 bg-white/95 p-4 shadow-[var(--shadow-card)] backdrop-blur">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-rosewood/65">Cart total</p>
+              <p className="mt-1 text-lg font-semibold text-cocoa">{formatCurrency(cart.summary.total)}</p>
+            </div>
+            <Link href="/checkout" className="button-primary !px-5 !py-3">
+              Checkout
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

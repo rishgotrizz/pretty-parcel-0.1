@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { EmptyState } from "@/components/shared/empty-state";
 import { getCurrentUser } from "@/lib/server/auth";
 import { getUserOrders } from "@/lib/server/storefront";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatOrderStatus } from "@/lib/utils";
 
 export default async function OrdersPage() {
   const user = await getCurrentUser();
@@ -32,7 +32,7 @@ export default async function OrdersPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-rosewood/70">
                   Order #{order._id.slice(-6).toUpperCase()}
                 </p>
-                <h2 className="mt-3 font-serif text-3xl text-cocoa">{order.status.replaceAll("_", " ")}</h2>
+                <h2 className="mt-3 font-serif text-3xl text-cocoa">{formatOrderStatus(order.status)}</h2>
                 <p className="mt-2 text-sm text-rosewood/75">{formatDate(order.createdAt)}</p>
               </div>
               <div className="text-right">

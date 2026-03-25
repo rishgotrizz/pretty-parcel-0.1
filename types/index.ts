@@ -10,12 +10,13 @@ export type UserRole = "user" | "customer" | "admin";
 
 export type OrderStatus =
   | "pending"
+  | "confirmed"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
   | "paid"
   | "processing"
-  | "shipped"
-  | "out_for_delivery"
-  | "delivered"
-  | "cancelled";
+  | "out_for_delivery";
 
 export type CouponType = "percentage" | "fixed";
 
@@ -37,10 +38,12 @@ export interface ProductType {
   category: ProductCategory;
   tags: string[];
   stock: number;
+  views?: number;
   popularity: number;
   isFeatured: boolean;
   isSpecial?: boolean;
   isActive: boolean;
+  isDeleted?: boolean;
   images: string[];
   specifications: string[];
   customisationNotes?: string;

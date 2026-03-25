@@ -8,32 +8,37 @@ import { connectToDatabase } from "@/lib/server/db";
 export async function buildAdminAnalytics() {
   await connectToDatabase();
 
-  const [orders, events, carts, totalUsers, totalProducts, totalOrders, newUsers, activeUsers, notificationSubscribers, rewardsGiven] = await Promise.all([
+  const [orders, events, carts, totalUsers, totalProducts, totalOrders, newUsers, activeUsers, notificationSubscribers, rewardsGiven, mostViewedProducts] = await Promise.all([
     Order.find().sort({ createdAt: -1 }).lean(),
     AnalyticsEvent.find().sort({ createdAt: -1 }).limit(500).lean(),
     Cart.find().lean(),
-    User.countDocuments({ role: "customer" }),
-    Product.countDocuments(),
+    User.countDocuments({ role: { $in: ["customer", "user"] } }),
+    Product.countDocuments({ isDeleted: { $ne: true } }),
     Order.countDocuments(),
     User.countDocuments({
-      role: "customer",
+      role: { $in: ["customer", "user"] },
       createdAt: {
         $gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7)
       }
     }),
     User.countDocuments({
-      role: "customer",
+      role: { $in: ["customer", "user"] },
       lastLogin: {
         $gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7)
       }
     }),
     User.countDocuments({ notificationPermission: "granted" }),
-    User.countDocuments({ notificationRewardClaimed: true })
+    User.countDocuments({ notificationRewardClaimed: true }),
+    Product.find({ isDeleted: { $ne: true }, isActive: true })
+      .sort({ views: -1, popularity: -1 })
+      .limit(5)
+      .select("name slug views")
+      .lean<any[]>()
   ]);
 
-  const completedStatuses = ["paid", "processing", "shipped", "out_for_delivery", "delivered"];
+  const completedStatuses = ["confirmed", "paid", "processing", "shipped", "out_for_delivery", "delivered"];
   const paidOrders = (orders as any[]).filter((order) =>
-    ["paid", "processing", "shipped", "delivered"].includes(order.status)
+    ["confirmed", "paid", "processing", "shipped", "delivered"].includes(order.status)
   );
   const completedOrders = (orders as any[]).filter((order) => completedStatuses.includes(order.status));
   const totalRevenue = paidOrders.reduce((sum: number, order: any) => sum + order.total, 0);
@@ -110,16 +115,10 @@ export async function buildAdminAnalytics() {
       .sort(([a], [b]) => a.localeCompare(b))
       .slice(-7)
       .map(([date, revenue]) => ({ date, revenue })),
-    topExitPages: Object.entries(
-      (events as any[]).reduce<Record<string, number>>((acc, event) => {
-        if (event.eventType === "time_spent" && event.durationMs && event.durationMs > 60000) {
-          acc[event.path] = (acc[event.path] ?? 0) + 1;
-        }
-        return acc;
-      }, {})
-    )
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([path, count]) => ({ path, count }))
+    topViewedProducts: mostViewedProducts.map((product) => ({
+      name: product.name,
+      slug: product.slug,
+      views: product.views ?? 0
+    }))
   };
 }

@@ -4,17 +4,19 @@ import { Order } from "@/lib/models/Order";
 import { isObjectId, logApiError, parseJsonBody } from "@/lib/server/api";
 import { requireAdmin } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
+import { formatOrderStatus, normalizeOrderStatus } from "@/lib/utils";
 
 const orderStatusSchema = z.object({
   orderId: z.string(),
-  status: z.enum(["pending", "paid", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"])
+  status: z.enum(["pending", "confirmed", "shipped", "delivered", "cancelled"])
 });
 
 const allowedTransitions: Record<string, string[]> = {
-  pending: ["processing", "cancelled"],
-  paid: ["processing", "cancelled"],
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["shipped", "cancelled"],
+  paid: ["confirmed", "cancelled"],
   processing: ["shipped", "cancelled"],
-  shipped: ["out_for_delivery"],
+  shipped: ["delivered"],
   out_for_delivery: ["delivered"],
   delivered: [],
   cancelled: []
@@ -31,7 +33,7 @@ export async function GET() {
   return Response.json({
     orders: (orders as any[]).map((order) => ({
       _id: order._id.toString(),
-      status: order.status,
+      status: normalizeOrderStatus(order.status),
       total: order.total,
       createdAt: new Date(order.createdAt).toISOString(),
       customerName: order.shippingAddress?.fullName ?? "Customer",
@@ -90,14 +92,15 @@ export async function PATCH(request: Request) {
       return Response.json({ error: "Order not found." }, { status: 404 });
     }
 
-    if (!allowedTransitions[order.status]?.includes(parsed.data.status)) {
+    const currentStatus = normalizeOrderStatus(order.status);
+    if (!allowedTransitions[currentStatus]?.includes(parsed.data.status)) {
       return Response.json(
-        { error: `Order cannot move from ${order.status.replaceAll("_", " ")} to ${parsed.data.status.replaceAll("_", " ")}.` },
+        { error: `Order cannot move from ${formatOrderStatus(currentStatus)} to ${formatOrderStatus(parsed.data.status)}.` },
         { status: 400 }
       );
     }
 
-    if (["paid", "processing", "shipped", "out_for_delivery", "delivered"].includes(parsed.data.status) && order.payment?.status !== "paid") {
+    if (["confirmed", "shipped", "delivered"].includes(parsed.data.status) && order.payment?.status !== "paid") {
       return Response.json({ error: "Only paid orders can move into fulfilment stages." }, { status: 400 });
     }
 
@@ -108,7 +111,7 @@ export async function PATCH(request: Request) {
         ...(order.tracking?.timeline ?? []),
         {
           status: parsed.data.status,
-          label: `Order marked as ${parsed.data.status.replaceAll("_", " ")} by admin.`,
+          label: `Order marked as ${formatOrderStatus(parsed.data.status)} by admin.`,
           at: new Date()
         }
       ]

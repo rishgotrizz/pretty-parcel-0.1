@@ -8,6 +8,7 @@ import { BrandingCustomization } from "@/components/admin/branding-customization
 import { OrderTable } from "@/components/admin/order-table";
 import { ProductForm, type ProductFormFieldErrors, type ProductFormValues } from "@/components/admin/product-form";
 import { ReviewsManager } from "@/components/admin/reviews-manager";
+import { broadcastProductsUpdated } from "@/components/products/use-products-feed";
 import { useToast } from "@/components/providers/toast-provider";
 import { formatCurrency } from "@/lib/utils";
 
@@ -53,9 +54,10 @@ type DashboardPayload = {
       cartEvents: number;
       wishlistEvents: number;
       abandonedCarts: number;
+      rewardsGiven?: number;
     };
     revenueTrend: Array<{ date: string; revenue: number }>;
-    topExitPages: Array<{ path: string; count: number }>;
+    topViewedProducts: Array<{ name: string; slug: string; views: number }>;
   };
   products: ProductAdminItem[];
   orders: Array<{
@@ -315,6 +317,7 @@ export function AdminDashboard() {
 
       setMessage(values.id ? "Product updated successfully." : "Product added successfully.");
       pushToast(values.id ? "Product updated successfully." : "Product added successfully.", "success");
+      broadcastProductsUpdated();
       clearProductForm();
       void loadDashboard();
     } catch (error) {
@@ -410,7 +413,7 @@ export function AdminDashboard() {
   async function deleteProduct(id: string) {
     try {
       setActiveDeleteId(id);
-      const response = await fetch(`/api/admin/products?id=${id}`, {
+      const response = await fetch(`/api/admin/products/${id}`, {
         method: "DELETE",
         credentials: "include",
         headers: { Accept: "application/json" }
@@ -435,6 +438,7 @@ export function AdminDashboard() {
       }
       setMessage("Product deleted.");
       pushToast("Product deleted.", "success");
+      broadcastProductsUpdated();
     } catch (error) {
       console.error("[AdminDashboard] delete product failed", error);
       setMessage("Could not delete product.");
@@ -667,20 +671,20 @@ export function AdminDashboard() {
             ))}
           </div>
           <div className="mt-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-rosewood/60">Drop-off pages</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-rosewood/60">Most viewed products</p>
             <div className="mt-4 space-y-3">
-              {data.analytics.topExitPages.length ? (
-                data.analytics.topExitPages.map((page) => (
-                  <div key={page.path} className="flex items-center justify-between rounded-[1.25rem] bg-white/85 px-4 py-3">
-                    <span className="truncate text-sm text-cocoa">{page.path}</span>
+              {data.analytics.topViewedProducts.length ? (
+                data.analytics.topViewedProducts.map((product) => (
+                  <div key={product.slug} className="flex items-center justify-between rounded-[1.25rem] bg-white/85 px-4 py-3">
+                    <span className="truncate text-sm text-cocoa">{product.name}</span>
                     <span className="rounded-full bg-rosewater px-3 py-1 text-xs font-semibold text-rosewood">
-                      {page.count}
+                      {product.views} views
                     </span>
                   </div>
                 ))
               ) : (
                 <div className="rounded-[1.25rem] bg-white/85 px-4 py-3 text-sm text-rosewood/70">
-                  Exit-page insights will appear as shoppers browse.
+                  Product view insights will appear as shoppers browse.
                 </div>
               )}
             </div>
