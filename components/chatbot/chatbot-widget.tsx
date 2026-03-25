@@ -8,9 +8,9 @@ export function ChatbotWidget() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 md:bottom-6 md:right-6">
+    <div className="pointer-events-none fixed inset-x-4 bottom-4 z-50 md:inset-x-auto md:right-6 md:bottom-6">
       {open ? (
-        <div className="glass-panel mb-3 w-[min(22rem,calc(100vw-2rem))] rounded-[2rem] p-5 shadow-[var(--shadow-card)]">
+        <div className="pointer-events-auto glass-panel mb-3 ml-auto w-full max-w-[22rem] rounded-[2rem] p-5 shadow-[var(--shadow-card)]">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-serif text-2xl text-cocoa">Custom Order</p>
@@ -40,7 +40,7 @@ export function ChatbotWidget() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="button-primary relative z-50 min-h-[48px] gap-2 shadow-glow"
+        className="pointer-events-auto button-primary relative z-50 ml-auto min-h-[48px] w-full justify-center gap-2 shadow-glow md:w-auto"
       >
         <MessageCircle className="h-4 w-4" />
         Custom Order 💖

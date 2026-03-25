@@ -36,7 +36,7 @@ export function ReviewsSection({ reviews, loading = false }: { reviews: ReviewCa
   }, [reviews.length]);
 
   return (
-    <section className="relative z-20 mt-16 pb-10 md:mt-20 sm:pb-16">
+    <section className="isolate mt-24 pb-28 pt-3 md:mt-20 md:pb-16 md:pt-0">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 text-center sm:mb-10 md:text-left">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-pink-700/70">Customer Love 💖</p>
@@ -49,7 +49,7 @@ export function ReviewsSection({ reviews, loading = false }: { reviews: ReviewCa
         </div>
 
         {loading ? (
-          <div className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:gap-6 md:overflow-visible">
+          <div className="flex gap-4 overflow-x-auto pb-4 pr-4 scroll-smooth snap-x snap-mandatory overscroll-x-contain [scrollbar-width:none] [scroll-padding-inline:1rem] touch-pan-x [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pr-0">
             {Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={index}
@@ -66,7 +66,7 @@ export function ReviewsSection({ reviews, loading = false }: { reviews: ReviewCa
         ) : reviews.length ? (
           <div
             ref={scrollerRef}
-            className="flex gap-4 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:gap-6 md:overflow-visible"
+            className="flex gap-4 overflow-x-auto pb-4 pr-4 scroll-smooth snap-x snap-mandatory overscroll-x-contain [scrollbar-width:none] [scroll-padding-inline:1rem] touch-pan-x [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pr-0"
           >
             {reviews.map((review) => (
               <Card
@@ -78,7 +78,7 @@ export function ReviewsSection({ reviews, loading = false }: { reviews: ReviewCa
                   <Heart className="h-4 w-4 fill-current" />
                   <Heart className="h-4 w-4 fill-current" />
                 </div>
-                <p className="mt-4 text-sm leading-7 text-rosewood/85">{review.text}</p>
+                <p className="mt-4 break-words text-sm leading-7 text-rosewood/85">{review.text}</p>
                 {review.imageUrl ? (
                   <img
                     src={review.imageUrl}
@@ -86,7 +86,7 @@ export function ReviewsSection({ reviews, loading = false }: { reviews: ReviewCa
                     className="mt-5 h-40 w-full rounded-xl object-cover"
                   />
                 ) : null}
-                <p className="mt-5 font-semibold text-cocoa">{review.name}</p>
+                <p className="mt-5 break-words font-semibold text-cocoa">{review.name}</p>
               </Card>
             ))}
           </div>
