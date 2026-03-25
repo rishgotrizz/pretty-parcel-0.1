@@ -62,7 +62,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         return;
       }
 
-      setUser(data.user ?? null);
+      setUser(data?.data?.user ?? data?.user ?? null);
       await refresh();
       pushToast(isLogin ? "Logged in successfully." : "Account created successfully.", "success");
       router.push(nextPath);

@@ -8,6 +8,14 @@ import { useToast } from "@/components/providers/toast-provider";
 
 const PROMPT_KEY = "pretty-parcel-notification-prompted";
 
+function getNotificationPermission() {
+  if (typeof window === "undefined" || !("Notification" in window)) {
+    return "unsupported";
+  }
+
+  return Notification.permission;
+}
+
 async function registerNotificationWorker() {
   if (!("serviceWorker" in navigator)) {
     return null;
@@ -31,12 +39,16 @@ export function NotificationCenter() {
       return false;
     }
 
+    const permission = getNotificationPermission();
+    if (permission === "unsupported") {
+      return false;
+    }
+
     return (
-      "Notification" in window &&
       !user.notificationRewardClaimed &&
       (
-        (Notification.permission === "default" && window.localStorage.getItem(PROMPT_KEY) !== "true") ||
-        (Notification.permission === "granted" && !user.notificationEnabled)
+        (permission === "default" && window.localStorage.getItem(PROMPT_KEY) !== "true") ||
+        (permission === "granted" && !user.notificationEnabled)
       )
     );
   }, [user]);
@@ -46,7 +58,7 @@ export function NotificationCenter() {
   }, [canPrompt]);
 
   useEffect(() => {
-    if (!user || typeof window === "undefined" || Notification.permission !== "granted") {
+    if (!user || typeof window === "undefined" || getNotificationPermission() !== "granted") {
       return;
     }
 
@@ -100,6 +112,7 @@ export function NotificationCenter() {
 
   async function enableNotifications() {
     if (typeof window === "undefined" || !("Notification" in window)) {
+      pushToast("Notifications are not supported in this browser.", "info");
       return;
     }
 
