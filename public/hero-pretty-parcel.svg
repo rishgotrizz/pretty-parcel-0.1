@@ -1,0 +1,26 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" rx="48" fill="#FFF7F8"/>
+  <rect x="40" y="40" width="1120" height="820" rx="40" fill="url(#bg)"/>
+  <circle cx="940" cy="210" r="160" fill="#F9D7DE"/>
+  <circle cx="260" cy="670" r="200" fill="#F3B7C5" fill-opacity="0.55"/>
+  <rect x="120" y="148" width="460" height="560" rx="36" fill="#FFFFFF" fill-opacity="0.72"/>
+  <rect x="620" y="240" width="420" height="440" rx="36" fill="#FFFFFF" fill-opacity="0.68"/>
+  <path d="M270 550C270 458.322 344.322 384 436 384V384C527.678 384 602 458.322 602 550V580H270V550Z" fill="#F4D4DB"/>
+  <circle cx="436" cy="322" r="88" fill="#FFD8E1"/>
+  <path d="M738 598L822 422L906 598H738Z" fill="#E9B6C1"/>
+  <path d="M790 598L874 454L958 598H790Z" fill="#D7A764"/>
+  <rect x="168" y="192" width="212" height="28" rx="14" fill="#E8C7CF"/>
+  <rect x="168" y="236" width="320" height="18" rx="9" fill="#EFD9DE"/>
+  <rect x="168" y="270" width="270" height="18" rx="9" fill="#EFD9DE"/>
+  <rect x="670" y="160" width="252" height="24" rx="12" fill="#8D5B69" fill-opacity="0.18"/>
+  <rect x="670" y="200" width="320" height="18" rx="9" fill="#8D5B69" fill-opacity="0.12"/>
+  <rect x="670" y="708" width="190" height="22" rx="11" fill="#8D5B69" fill-opacity="0.18"/>
+  <text x="168" y="740" fill="#6D4256" font-family="Georgia, serif" font-size="62">The Pretty Parcel</text>
+  <text x="170" y="792" fill="#8D5B69" font-family="Arial, sans-serif" font-size="26" letter-spacing="4">HANDMADE GIFTING WEBSITE</text>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="120" x2="1120" y2="820" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF3F6"/>
+      <stop offset="1" stop-color="#FFFDFB"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,0 +1,13 @@
+<svg width="900" height="900" viewBox="0 0 900 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="900" rx="40" fill="#FFF9FB"/>
+  <rect x="170" y="260" width="560" height="360" rx="34" fill="#F7D7DF"/>
+  <rect x="210" y="300" width="480" height="280" rx="24" fill="#FFFDFB"/>
+  <path d="M170 340H730" stroke="#E2B7C0" stroke-width="18"/>
+  <path d="M450 260V620" stroke="#E2B7C0" stroke-width="18"/>
+  <circle cx="450" cy="340" r="64" fill="#D7A764"/>
+  <circle cx="405" cy="340" r="32" fill="#FFF4F6"/>
+  <circle cx="495" cy="340" r="32" fill="#FFF4F6"/>
+  <rect x="280" y="392" width="110" height="140" rx="24" fill="#FFDDE5"/>
+  <rect x="426" y="430" width="180" height="102" rx="24" fill="#F1C2CD"/>
+  <text x="250" y="810" fill="#6D4256" font-family="Georgia, serif" font-size="48">Celebration Hamper</text>
+</svg>

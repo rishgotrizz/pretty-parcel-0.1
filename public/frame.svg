@@ -1,0 +1,13 @@
+<svg width="900" height="900" viewBox="0 0 900 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="900" rx="40" fill="#FFF9FA"/>
+  <rect x="170" y="140" width="560" height="620" rx="38" fill="#D7A764"/>
+  <rect x="214" y="184" width="472" height="532" rx="26" fill="#FFFDFB"/>
+  <circle cx="450" cy="370" r="118" fill="#F4D6DD"/>
+  <circle cx="390" cy="370" r="22" fill="#8D5B69"/>
+  <circle cx="510" cy="370" r="22" fill="#8D5B69"/>
+  <path d="M388 450C428 485 472 485 512 450" stroke="#8D5B69" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="300" cy="246" r="22" fill="#F3B7C5"/>
+  <circle cx="618" cy="280" r="28" fill="#F7D7DF"/>
+  <circle cx="620" cy="618" r="24" fill="#E2B7C0"/>
+  <text x="266" y="822" fill="#6D4256" font-family="Georgia, serif" font-size="54">Pet Portrait Frame</text>
+</svg>
