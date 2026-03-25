@@ -80,7 +80,9 @@ export function NotificationCenter() {
           });
           const raw = await response.text();
           const data = raw ? JSON.parse(raw) : {};
-          const notifications = Array.isArray(data.notifications) ? data.notifications : [];
+          const notifications = Array.isArray(data?.notifications ?? data?.data?.notifications)
+            ? (data?.notifications ?? data?.data?.notifications)
+            : [];
 
           notifications.forEach((notification: { message: string }) => {
             registration.showNotification("The Pretty Parcel", {
@@ -137,16 +139,17 @@ export function NotificationCenter() {
       });
       const raw = await response.text();
       const data = raw ? JSON.parse(raw) : {};
+      const payload = data?.data ?? data ?? {};
       window.localStorage.setItem(PROMPT_KEY, "true");
       setVisible(false);
 
-      if (!response.ok) {
+      if (!response.ok || data?.success === false) {
         pushToast(data.error ?? "Could not enable notifications.", "error");
         return;
       }
 
       await refresh();
-      if (data.alreadyClaimed) {
+      if (payload?.alreadyClaimed || data?.alreadyClaimed) {
         pushToast("Your notification reward has already been claimed.", "info");
         return;
       }

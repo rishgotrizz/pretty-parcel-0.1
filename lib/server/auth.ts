@@ -118,6 +118,10 @@ export async function createAuthResponse(user: {
 
   const response = NextResponse.json({
     success: true,
+    data: {
+      user
+    },
+    error: null,
     user
   });
 

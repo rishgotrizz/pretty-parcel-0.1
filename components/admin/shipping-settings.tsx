@@ -21,8 +21,9 @@ export function ShippingSettings() {
         });
         const raw = await response.text();
         const data = raw ? JSON.parse(raw) : {};
-        setShippingPrice(String(data.shippingPrice ?? 149));
-        setFreeShippingThreshold(String(data.freeShippingThreshold ?? 1999));
+        const payload = data?.data ?? data ?? {};
+        setShippingPrice(String(payload?.shippingPrice ?? 149));
+        setFreeShippingThreshold(String(payload?.freeShippingThreshold ?? 1999));
       } catch (error) {
         console.error("[ShippingSettings] load failed", error);
         pushToast("Could not load shipping settings.", "error");
@@ -48,14 +49,15 @@ export function ShippingSettings() {
       });
       const raw = await response.text();
       const data = raw ? JSON.parse(raw) : {};
+      const payload = data?.data ?? data ?? {};
 
       if (!response.ok) {
         pushToast(data.error ?? "Could not save shipping settings.", "error");
         return;
       }
 
-      setShippingPrice(String(data.shippingPrice));
-      setFreeShippingThreshold(String(data.freeShippingThreshold));
+      setShippingPrice(String(payload?.shippingPrice ?? shippingPrice));
+      setFreeShippingThreshold(String(payload?.freeShippingThreshold ?? freeShippingThreshold));
       pushToast("Shipping settings saved.", "success");
     } catch (error) {
       console.error("[ShippingSettings] save failed", error);

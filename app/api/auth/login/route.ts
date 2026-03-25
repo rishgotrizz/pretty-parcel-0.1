@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { User } from "@/lib/models/User";
-import { logApiError, parseJsonBody } from "@/lib/server/api";
+import { apiError, logApiError, parseJsonBody } from "@/lib/server/api";
 import { createAuthResponse, verifyPassword } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
 import { getCustomerLevel } from "@/lib/utils";
@@ -15,18 +15,18 @@ export async function POST(request: Request) {
   try {
     const parsed = loginSchema.safeParse(await parseJsonBody(request));
     if (!parsed.success) {
-      return Response.json({ error: "Please provide a valid email and password." }, { status: 400 });
+      return apiError("Please provide a valid email and password.", 400);
     }
 
     await connectToDatabase();
     const user = await User.findOne({ email: parsed.data.email.toLowerCase() }).select("+password");
     if (!user?.password) {
-      return Response.json({ error: "Invalid email or password." }, { status: 401 });
+      return apiError("Invalid email or password.", 401);
     }
 
     const isValid = await verifyPassword(parsed.data.password, user.password);
     if (!isValid) {
-      return Response.json({ error: "Invalid email or password." }, { status: 401 });
+      return apiError("Invalid email or password.", 401);
     }
 
     const now = new Date();
@@ -45,6 +45,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     logApiError("api/auth/login", error);
-    return Response.json({ error: "We could not log you in right now." }, { status: 500 });
+    return apiError("We could not log you in right now.", 500);
   }
 }

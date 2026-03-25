@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { Cart } from "@/lib/models/Cart";
 import { User } from "@/lib/models/User";
-import { isDuplicateKeyError, logApiError, parseJsonBody } from "@/lib/server/api";
+import { apiError, isDuplicateKeyError, logApiError, parseJsonBody } from "@/lib/server/api";
 import { createAuthResponse, hashPassword } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
 
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   try {
     const parsed = registerSchema.safeParse(await parseJsonBody(request));
     if (!parsed.success) {
-      return Response.json({ error: "Please provide a valid name, email, and password." }, { status: 400 });
+      return apiError("Please provide a valid name, email, and password.", 400);
     }
 
     const { name, email, password } = parsed.data;
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     const existingUser = await User.findOne({ email: email.toLowerCase() }).select("_id").lean();
     if (existingUser) {
-      return Response.json({ error: "An account with this email already exists." }, { status: 409 });
+      return apiError("An account with this email already exists.", 409);
     }
 
     const user = await User.create({
@@ -64,10 +64,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (isDuplicateKeyError(error)) {
-      return Response.json({ error: "An account with this email already exists." }, { status: 409 });
+      return apiError("An account with this email already exists.", 409);
     }
 
     logApiError("api/auth/register", error);
-    return Response.json({ error: "We could not create your account right now." }, { status: 500 });
+    return apiError("We could not create your account right now.", 500);
   }
 }

@@ -236,14 +236,56 @@ export function AdminDashboard() {
         readJson(marketingResponse)
       ]);
 
-      setSpecialCategoryTitle(marketing.specialCategoryTitle ?? "Special Picks");
+      const analyticsPayload = analytics?.data ?? analytics ?? {};
+      const productsPayload = products?.data ?? products ?? {};
+      const ordersPayload = orders?.data ?? orders ?? {};
+      const couponsPayload = coupons?.data ?? coupons ?? {};
+      const marketingPayload = marketing?.data ?? marketing ?? {};
+      const normalizedAnalytics = {
+        summary: {
+          totalRevenue: 0,
+          totalUsers: 0,
+          newUsers: 0,
+          activeUsers: 0,
+          repeatCustomers: 0,
+          notificationSubscribers: 0,
+          totalOrders: 0,
+          totalProducts: 0,
+          paidOrders: 0,
+          averageOrderValue: 0,
+          dailyRevenue: 0,
+          weeklyRevenue: 0,
+          monthlyRevenue: 0,
+          pageViews: 0,
+          clickEvents: 0,
+          cartEvents: 0,
+          wishlistEvents: 0,
+          abandonedCarts: 0,
+          rewardsGiven: 0,
+          ...(analyticsPayload?.summary ?? {})
+        },
+        revenueTrend: Array.isArray(analyticsPayload?.revenueTrend) ? analyticsPayload.revenueTrend : [],
+        topViewedProducts: Array.isArray(analyticsPayload?.topViewedProducts) ? analyticsPayload.topViewedProducts : [],
+        customerLevels: Array.isArray(analyticsPayload?.customerLevels) ? analyticsPayload.customerLevels : []
+      };
+      const normalizedProducts = Array.isArray(productsPayload?.products ?? products?.products) ? (productsPayload?.products ?? products?.products) : [];
+      const normalizedOrders = Array.isArray(ordersPayload?.orders ?? orders?.orders) ? (ordersPayload?.orders ?? orders?.orders) : [];
+      const normalizedCoupons = Array.isArray(couponsPayload?.coupons ?? coupons?.coupons) ? (couponsPayload?.coupons ?? coupons?.coupons) : [];
+      const nextSpecialCategoryTitle =
+        typeof marketingPayload?.specialCategoryTitle === "string"
+          ? marketingPayload.specialCategoryTitle
+          : typeof marketing?.specialCategoryTitle === "string"
+            ? marketing.specialCategoryTitle
+            : "Special Picks";
+
+      setSpecialCategoryTitle(nextSpecialCategoryTitle);
       setData({
-        analytics,
-        products: products.products ?? [],
-        orders: orders.orders ?? [],
-        coupons: coupons.coupons ?? [],
+        analytics: normalizedAnalytics,
+        products: normalizedProducts,
+        orders: normalizedOrders,
+        coupons: normalizedCoupons,
         marketing: {
-          specialCategoryTitle: marketing.specialCategoryTitle ?? "Special Picks"
+          specialCategoryTitle: nextSpecialCategoryTitle
         }
       });
     } catch (error) {

@@ -7,6 +7,7 @@ export async function GET() {
     data: {
       user
     },
+    error: null,
     user
   });
 }

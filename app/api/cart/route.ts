@@ -4,7 +4,7 @@ import { z } from "zod";
 import { Cart } from "@/lib/models/Cart";
 import { Product } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
-import { logApiError, parseJsonBody } from "@/lib/server/api";
+import { apiError, apiSuccess, logApiError, parseJsonBody } from "@/lib/server/api";
 import { requireUser } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
 import { getProductEffectivePrice } from "@/lib/server/pricing";
@@ -23,35 +23,35 @@ const updateSchema = z.object({
 export async function GET() {
   const user = await requireUser();
   if (user instanceof Response) {
-    return Response.json({ error: "Login required to access your cart." }, { status: 401 });
+    return apiError("Login required to access your cart.", 401);
   }
 
   const cart = await getUserCart(user._id);
-  return Response.json(cart);
+  return apiSuccess(cart, undefined, cart as Record<string, unknown>);
 }
 
 export async function POST(request: Request) {
   const user = await requireUser();
   if (user instanceof Response) {
-    return Response.json({ error: "Please login to add items to cart." }, { status: 401 });
+    return apiError("Please login to add items to cart.", 401);
   }
 
   try {
     const parsed = cartSchema.safeParse(await parseJsonBody(request));
     if (!parsed.success) {
-      return Response.json({ error: "Invalid cart payload." }, { status: 400 });
+      return apiError("Invalid cart payload.", 400);
     }
     if (!Types.ObjectId.isValid(parsed.data.productId)) {
-      return Response.json({ error: "Invalid product id." }, { status: 400 });
+      return apiError("Invalid product id.", 400);
     }
 
     await connectToDatabase();
     const product = await Product.findById(parsed.data.productId);
     if (!product || !product.isActive) {
-      return Response.json({ error: "Product not found." }, { status: 404 });
+      return apiError("Product not found.", 404);
     }
     if (product.stock < 1) {
-      return Response.json({ error: "This product is currently out of stock." }, { status: 400 });
+      return apiError("This product is currently out of stock.", 400);
     }
 
     const unitPrice = getProductEffectivePrice({
@@ -78,19 +78,13 @@ export async function POST(request: Request) {
     if (existingItem) {
       const nextQuantity = existingItem.quantity + parsed.data.quantity;
       if (nextQuantity > product.stock) {
-        return Response.json(
-          { error: `Only ${product.stock} unit${product.stock === 1 ? "" : "s"} left in stock.` },
-          { status: 400 }
-        );
+        return apiError(`Only ${product.stock} unit${product.stock === 1 ? "" : "s"} left in stock.`, 400);
       }
       existingItem.quantity = nextQuantity;
       existingItem.unitPrice = unitPrice;
     } else {
       if (parsed.data.quantity > product.stock) {
-        return Response.json(
-          { error: `Only ${product.stock} unit${product.stock === 1 ? "" : "s"} left in stock.` },
-          { status: 400 }
-        );
+        return apiError(`Only ${product.stock} unit${product.stock === 1 ? "" : "s"} left in stock.`, 400);
       }
       cart.items.push({
         product: product._id,
@@ -106,32 +100,33 @@ export async function POST(request: Request) {
       }
     });
 
-    return Response.json(await getUserCart(user._id));
+    const cartResponse = await getUserCart(user._id);
+    return apiSuccess(cartResponse, undefined, cartResponse as Record<string, unknown>);
   } catch (error) {
     logApiError("api/cart:POST", error);
-    return Response.json({ error: "We could not update your cart right now." }, { status: 500 });
+    return apiError("We could not update your cart right now.", 500);
   }
 }
 
 export async function PATCH(request: Request) {
   const user = await requireUser();
   if (user instanceof Response) {
-    return Response.json({ error: "Please login to update your cart." }, { status: 401 });
+    return apiError("Please login to update your cart.", 401);
   }
 
   try {
     const parsed = updateSchema.safeParse(await parseJsonBody(request));
     if (!parsed.success) {
-      return Response.json({ error: "Invalid update payload." }, { status: 400 });
+      return apiError("Invalid update payload.", 400);
     }
     if (!Types.ObjectId.isValid(parsed.data.productId)) {
-      return Response.json({ error: "Invalid product id." }, { status: 400 });
+      return apiError("Invalid product id.", 400);
     }
 
     await connectToDatabase();
     const cart = await Cart.findOne({ user: user._id });
     if (!cart) {
-      return Response.json({ error: "Cart not found." }, { status: 404 });
+      return apiError("Cart not found.", 404);
     }
 
     const item = cart.items.find(
@@ -139,18 +134,15 @@ export async function PATCH(request: Request) {
         line.product.toString() === parsed.data.productId
     );
     if (!item) {
-      return Response.json({ error: "Cart item not found." }, { status: 404 });
+      return apiError("Cart item not found.", 404);
     }
 
     const product = await Product.findById(parsed.data.productId);
     if (!product || !product.isActive) {
-      return Response.json({ error: "Product not found." }, { status: 404 });
+      return apiError("Product not found.", 404);
     }
     if (parsed.data.quantity > product.stock) {
-      return Response.json(
-        { error: `Only ${product.stock} unit${product.stock === 1 ? "" : "s"} left in stock.` },
-        { status: 400 }
-      );
+      return apiError(`Only ${product.stock} unit${product.stock === 1 ? "" : "s"} left in stock.`, 400);
     }
 
     item.quantity = parsed.data.quantity;
@@ -166,26 +158,27 @@ export async function PATCH(request: Request) {
     });
     await cart.save();
 
-    return Response.json(await getUserCart(user._id));
+    const cartResponse = await getUserCart(user._id);
+    return apiSuccess(cartResponse, undefined, cartResponse as Record<string, unknown>);
   } catch (error) {
     logApiError("api/cart:PATCH", error);
-    return Response.json({ error: "We could not update your cart right now." }, { status: 500 });
+    return apiError("We could not update your cart right now.", 500);
   }
 }
 
 export async function DELETE(request: Request) {
   const user = await requireUser();
   if (user instanceof Response) {
-    return Response.json({ error: "Please login to update your cart." }, { status: 401 });
+    return apiError("Please login to update your cart.", 401);
   }
 
   try {
     const parsed = z.object({ productId: z.string() }).safeParse(await parseJsonBody(request));
     if (!parsed.success) {
-      return Response.json({ error: "Invalid cart removal payload." }, { status: 400 });
+      return apiError("Invalid cart removal payload.", 400);
     }
     if (!Types.ObjectId.isValid(parsed.data.productId)) {
-      return Response.json({ error: "Invalid product id." }, { status: 400 });
+      return apiError("Invalid product id.", 400);
     }
 
     await connectToDatabase();
@@ -198,9 +191,10 @@ export async function DELETE(request: Request) {
       }
     );
 
-    return Response.json(await getUserCart(user._id));
+    const cartResponse = await getUserCart(user._id);
+    return apiSuccess(cartResponse, undefined, cartResponse as Record<string, unknown>);
   } catch (error) {
     logApiError("api/cart:DELETE", error);
-    return Response.json({ error: "We could not update your cart right now." }, { status: 500 });
+    return apiError("We could not update your cart right now.", 500);
   }
 }

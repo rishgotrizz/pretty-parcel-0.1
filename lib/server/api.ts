@@ -25,3 +25,26 @@ export function isDuplicateKeyError(error: unknown) {
 export function logApiError(scope: string, error: unknown) {
   console.error(`[${scope}]`, error);
 }
+
+export function apiSuccess<T>(data: T, init?: ResponseInit, legacy?: Record<string, unknown>) {
+  return Response.json(
+    {
+      success: true,
+      data,
+      error: null,
+      ...(legacy ?? {})
+    },
+    init
+  );
+}
+
+export function apiError(message: string, status = 400, data: unknown = null) {
+  return Response.json(
+    {
+      success: false,
+      data,
+      error: message
+    },
+    { status }
+  );
+}
