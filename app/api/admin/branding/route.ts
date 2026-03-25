@@ -16,7 +16,14 @@ export async function GET() {
   }
 
   const settings = await getSettings();
-  return Response.json({ success: true, branding });
+  return Response.json({
+    success: true,
+    branding: settings ?? {
+      logoUrl: "",
+      heroImageUrl: "",
+      specialCategoryName: "Special Picks"
+    }
+  });
 }
 
 export async function PATCH(request: Request) {

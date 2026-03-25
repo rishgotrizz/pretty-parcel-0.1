@@ -27,8 +27,11 @@ export function NotificationCenter() {
       return false;
     }
 
+    if (!user) {
+      return false;
+    }
+
     return (
-      Boolean(user) &&
       "Notification" in window &&
       !user.notificationRewardClaimed &&
       (
