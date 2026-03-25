@@ -8,6 +8,7 @@ import { Button } from "@/components/shared/button";
 import { Card } from "@/components/shared/card";
 import { Input } from "@/components/shared/input";
 import { useAuth } from "@/components/providers/auth-provider";
+import { useToast } from "@/components/providers/toast-provider";
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const { setUser, refresh } = useAuth();
@@ -16,6 +17,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const nextPath = searchParams.get("next") ?? "/";
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const { pushToast } = useToast();
 
   const isLogin = mode === "login";
 
@@ -56,16 +58,19 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
       if (!response.ok) {
         setError(data.error ?? "Something went wrong.");
+        pushToast(data.error ?? "Something went wrong.", "error");
         return;
       }
 
       setUser(data.user ?? null);
       await refresh();
+      pushToast(isLogin ? "Logged in successfully." : "Account created successfully.", "success");
       router.push(nextPath);
       router.refresh();
     } catch (error) {
       console.error("[AuthForm] submit failed", error);
       setError("We couldn't submit the form. Please try again.");
+      pushToast("We couldn't submit the form. Please try again.", "error");
     } finally {
       setPending(false);
     }

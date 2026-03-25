@@ -78,6 +78,33 @@ export default async function OrderDetailPage({
             <span>{formatCurrency(order.total)}</span>
           </div>
         </div>
+        {order.customizationDetails &&
+        (order.customizationDetails.giftMessage ||
+          order.customizationDetails.nameCustomization ||
+          order.customizationDetails.specialInstructions) ? (
+          <div className="mt-6 rounded-[1.5rem] bg-rosewater/80 p-4 text-sm text-rosewood/85">
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-rosewood/60">Customization details</p>
+            <div className="mt-3 space-y-2">
+              {order.customizationDetails.giftMessage ? (
+                <p>
+                  <span className="font-semibold text-cocoa">Gift message:</span> {order.customizationDetails.giftMessage}
+                </p>
+              ) : null}
+              {order.customizationDetails.nameCustomization ? (
+                <p>
+                  <span className="font-semibold text-cocoa">Name customization:</span>{" "}
+                  {order.customizationDetails.nameCustomization}
+                </p>
+              ) : null}
+              {order.customizationDetails.specialInstructions ? (
+                <p>
+                  <span className="font-semibold text-cocoa">Special instructions:</span>{" "}
+                  {order.customizationDetails.specialInstructions}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
         <Link href="/products" className="button-secondary mt-6 w-full">
           Continue shopping
         </Link>

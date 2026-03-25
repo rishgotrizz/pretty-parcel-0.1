@@ -1,6 +1,7 @@
 "use client";
 
-import { MessageCircle, X } from "lucide-react";
+import Link from "next/link";
+import { Instagram, MessageCircle, X } from "lucide-react";
 import { useState } from "react";
 
 export function ChatbotWidget() {
@@ -48,14 +49,28 @@ export function ChatbotWidget() {
         <div className="glass-panel w-[min(22rem,calc(100vw-2rem))] rounded-[2rem] p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-serif text-2xl text-cocoa">Pretty Parcel Help</p>
-              <p className="text-xs uppercase tracking-[0.25em] text-rosewood/70">Gift assistant</p>
+              <p className="font-serif text-2xl text-cocoa">Custom Order</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-rosewood/70">Instagram and gift assistant</p>
             </div>
-            <button onClick={() => setOpen(false)} className="rounded-full bg-white/80 p-2 text-rosewood">
+            <button type="button" onClick={() => setOpen(false)} className="rounded-full bg-white/80 p-2 text-rosewood">
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="mt-4 rounded-[1.5rem] bg-white/80 p-4 text-sm leading-7 text-rosewood/90">{reply}</div>
+          <div className="mt-4 rounded-[1.5rem] bg-white/80 p-4 text-sm leading-7 text-rosewood/90">
+            <p>{reply}</p>
+            <div className="mt-4 rounded-[1.25rem] bg-rosewater/90 p-4">
+              <p className="font-medium text-cocoa">For fully customized gifts, contact us on Instagram.</p>
+              <Link
+                href="https://www.instagram.com/theprettyparcel._/"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-pink-700"
+              >
+                <Instagram className="h-4 w-4" />
+                @theprettyparcel._
+              </Link>
+            </div>
+          </div>
           <div className="mt-4 flex gap-3">
             <input
               value={message}
@@ -63,15 +78,15 @@ export function ChatbotWidget() {
               placeholder="Ask about bouquets, offers, or shipping..."
               className="flex-1 rounded-full border border-white/70 bg-white/90 px-4 py-3 text-sm outline-none"
             />
-            <button onClick={handleSend} className="button-primary !px-4" disabled={pending}>
+            <button type="button" onClick={handleSend} className="button-primary !px-4" disabled={pending}>
               {pending ? "..." : "Send"}
             </button>
           </div>
         </div>
       ) : null}
-      <button onClick={() => setOpen((value) => !value)} className="button-primary mt-4 gap-2 shadow-glow">
+      <button type="button" onClick={() => setOpen((value) => !value)} className="button-primary mt-4 gap-2 shadow-glow">
         <MessageCircle className="h-4 w-4" />
-        Chat
+        Custom Order 💖
       </button>
     </div>
   );

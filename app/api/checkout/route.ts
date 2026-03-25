@@ -25,7 +25,14 @@ const checkoutSchema = z.object({
     city: z.string().min(2),
     state: z.string().min(2),
     postalCode: z.string().min(4)
-  })
+  }),
+  customizationDetails: z
+    .object({
+      giftMessage: z.string().max(240).optional().or(z.literal("")),
+      nameCustomization: z.string().max(120).optional().or(z.literal("")),
+      specialInstructions: z.string().max(400).optional().or(z.literal(""))
+    })
+    .optional()
 });
 
 export async function POST(request: Request) {
@@ -162,6 +169,13 @@ export async function POST(request: Request) {
         ...parsed.data.shippingAddress,
         country: "India"
       },
+      customizationDetails: parsed.data.customizationDetails
+        ? {
+            giftMessage: parsed.data.customizationDetails.giftMessage || undefined,
+            nameCustomization: parsed.data.customizationDetails.nameCustomization || undefined,
+            specialInstructions: parsed.data.customizationDetails.specialInstructions || undefined
+          }
+        : undefined,
       tracking: {
         timeline: [
           {

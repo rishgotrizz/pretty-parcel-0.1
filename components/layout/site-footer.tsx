@@ -25,6 +25,7 @@ export function SiteFooter() {
             <Link href="/login">Login</Link>
             <Link href="/signup">Sign up</Link>
             <Link href="/orders">Track orders</Link>
+            <Link href="/terms">Terms & policies</Link>
           </div>
         </div>
       </div>

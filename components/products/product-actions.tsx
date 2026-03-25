@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { useAuth } from "@/components/providers/auth-provider";
 import { trackClientEvent } from "@/components/providers/analytics-tracker";
+import { useToast } from "@/components/providers/toast-provider";
 
 export function ProductActions({
   productId,
@@ -19,6 +20,8 @@ export function ProductActions({
   const [quantity, setQuantity] = useState(1);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
+  const [wishlistPending, setWishlistPending] = useState(false);
+  const { pushToast } = useToast();
 
   const handleAddToCart = async () => {
     if (pending) {
@@ -53,6 +56,7 @@ export function ProductActions({
 
       if (!response.ok) {
         setMessage(data.error ?? "Please login to add this item.");
+        pushToast(data.error ?? "Please login to add this item.", "error");
         return;
       }
 
@@ -67,9 +71,11 @@ export function ProductActions({
       });
 
       setMessage("Added to cart.");
+      pushToast("Added to cart.", "success");
     } catch (error) {
       console.error("[ProductActions] add to cart failed", error);
       setMessage("We couldn't add this item to your cart. Please try again.");
+      pushToast("We couldn't add this item to your cart. Please try again.", "error");
     } finally {
       setPending(false);
     }
@@ -77,6 +83,11 @@ export function ProductActions({
 
   const handleWishlist = async () => {
     try {
+      if (wishlistPending) {
+        return;
+      }
+
+      setWishlistPending(true);
       setMessage("");
 
       console.debug("[ProductActions] wishlist clicked", {
@@ -102,6 +113,7 @@ export function ProductActions({
 
       setMessage(response.ok ? "Saved to wishlist." : data.error ?? "Please login to use wishlist.");
       if (response.ok) {
+        pushToast("Saved to wishlist.", "success");
         await refresh();
         window.dispatchEvent(new Event("pretty-parcel-wishlist-updated"));
         trackClientEvent({
@@ -110,10 +122,15 @@ export function ProductActions({
           label: "wishlist_add",
           metadata: { productId, category }
         });
+      } else {
+        pushToast(data.error ?? "Please login to use wishlist.", "error");
       }
     } catch (error) {
       console.error("[ProductActions] wishlist failed", error);
       setMessage("We couldn't update your wishlist. Please try again.");
+      pushToast("We couldn't update your wishlist. Please try again.", "error");
+    } finally {
+      setWishlistPending(false);
     }
   };
 
@@ -144,9 +161,9 @@ export function ProductActions({
           <ShoppingBag className="h-4 w-4" />
           {pending ? "Adding..." : "Add to cart"}
         </button>
-        <button type="button" onClick={handleWishlist} className="button-secondary gap-2">
+        <button type="button" onClick={handleWishlist} disabled={wishlistPending} className="button-secondary gap-2">
           <Heart className="h-4 w-4" />
-          Save to wishlist
+          {wishlistPending ? "Saving..." : "Save to wishlist"}
         </button>
       </div>
 

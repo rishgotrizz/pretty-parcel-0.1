@@ -1,24 +1,48 @@
 import { Cart } from "@/lib/models/Cart";
 import { AnalyticsEvent } from "@/lib/models/AnalyticsEvent";
 import { Order } from "@/lib/models/Order";
+import { Product } from "@/lib/models/Product";
+import { User } from "@/lib/models/User";
 import { connectToDatabase } from "@/lib/server/db";
 
 export async function buildAdminAnalytics() {
   await connectToDatabase();
 
-  const [orders, events, carts] = await Promise.all([
+  const [orders, events, carts, totalUsers, totalProducts, totalOrders, newUsers] = await Promise.all([
     Order.find().sort({ createdAt: -1 }).lean(),
     AnalyticsEvent.find().sort({ createdAt: -1 }).limit(500).lean(),
-    Cart.find().lean()
+    Cart.find().lean(),
+    User.countDocuments({ role: "customer" }),
+    Product.countDocuments(),
+    Order.countDocuments(),
+    User.countDocuments({
+      role: "customer",
+      createdAt: {
+        $gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7)
+      }
+    })
   ]);
 
+  const completedStatuses = ["paid", "processing", "shipped", "out_for_delivery", "delivered"];
   const paidOrders = (orders as any[]).filter((order) =>
     ["paid", "processing", "shipped", "delivered"].includes(order.status)
   );
+  const completedOrders = (orders as any[]).filter((order) => completedStatuses.includes(order.status));
   const totalRevenue = paidOrders.reduce((sum: number, order: any) => sum + order.total, 0);
   const averageOrderValue = paidOrders.length ? Math.round(totalRevenue / paidOrders.length) : 0;
   const now = Date.now();
   const oneDay = 1000 * 60 * 60 * 24;
+  const repeatCustomerIds = new Set(
+    Object.entries(
+      completedOrders.reduce<Record<string, number>>((acc, order) => {
+        const key = order.user.toString();
+        acc[key] = (acc[key] ?? 0) + 1;
+        return acc;
+      }, {})
+    )
+      .filter(([, count]) => count > 1)
+      .map(([userId]) => userId)
+  );
 
   const dailyRevenueValue = paidOrders
     .filter((order: any) => now - new Date(order.createdAt).getTime() <= oneDay)
@@ -55,6 +79,11 @@ export async function buildAdminAnalytics() {
   return {
     summary: {
       totalRevenue,
+      totalUsers,
+      newUsers,
+      repeatCustomers: repeatCustomerIds.size,
+      totalOrders,
+      totalProducts,
       paidOrders: paidOrders.length,
       averageOrderValue,
       dailyRevenue: dailyRevenueValue,

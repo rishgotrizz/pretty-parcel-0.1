@@ -32,6 +32,22 @@ type SerializedOrder = {
   total: number;
   couponCode?: string;
   status: string;
+  customizationDetails?: {
+    giftMessage?: string;
+    nameCustomization?: string;
+    specialInstructions?: string;
+  };
+  shippingAddress?: {
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+  };
   payment?: {
     invoiceNumber?: string;
   };

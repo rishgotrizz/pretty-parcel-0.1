@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { useToast } from "@/components/providers/toast-provider";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatCurrency } from "@/lib/utils";
 
@@ -26,6 +27,8 @@ type CartState = {
 export function CartView() {
   const [cart, setCart] = useState<CartState | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeProductId, setActiveProductId] = useState("");
+  const { pushToast } = useToast();
 
   const loadCart = async () => {
     try {
@@ -55,6 +58,7 @@ export function CartView() {
         summary: { subtotal: 0, discount: 0, shippingFee: 0, total: 0 },
         error: "We couldn't load your cart."
       });
+      pushToast("We couldn't load your cart.", "error");
     } finally {
       setLoading(false);
     }
@@ -66,6 +70,7 @@ export function CartView() {
 
   const updateQuantity = async (productId: string, quantity: number) => {
     try {
+      setActiveProductId(productId);
       console.debug("[CartView] update quantity", { productId, quantity });
       const response = await fetch("/api/cart", {
         method: "PATCH",
@@ -79,16 +84,22 @@ export function CartView() {
 
       if (!response.ok) {
         console.error("[CartView] update failed", data);
+        pushToast(data.error ?? "Could not update quantity.", "error");
+      } else {
+        pushToast("Cart updated.", "success");
       }
     } catch (error) {
       console.error("[CartView] update request failed", error);
+      pushToast("Could not update quantity.", "error");
     } finally {
+      setActiveProductId("");
       await loadCart();
     }
   };
 
   const removeItem = async (productId: string) => {
     try {
+      setActiveProductId(productId);
       console.debug("[CartView] remove item", { productId });
       const response = await fetch("/api/cart", {
         method: "DELETE",
@@ -102,10 +113,15 @@ export function CartView() {
 
       if (!response.ok) {
         console.error("[CartView] remove failed", data);
+        pushToast(data.error ?? "Could not remove item.", "error");
+      } else {
+        pushToast("Item removed from cart.", "success");
       }
     } catch (error) {
       console.error("[CartView] remove request failed", error);
+      pushToast("Could not remove item.", "error");
     } finally {
+      setActiveProductId("");
       await loadCart();
     }
   };
@@ -152,17 +168,32 @@ export function CartView() {
                     View product
                   </Link>
                 </div>
-                <button onClick={() => removeItem(item.product._id)} className="rounded-full bg-white/80 p-3 text-rosewood">
+                <button
+                  type="button"
+                  disabled={activeProductId === item.product._id}
+                  onClick={() => void removeItem(item.product._id)}
+                  className="rounded-full bg-white/80 p-3 text-rosewood"
+                >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
               <div className="mt-5 flex items-center justify-between gap-4">
                 <div className="inline-flex items-center rounded-full border border-white/70 bg-white/90 p-2">
-                  <button onClick={() => updateQuantity(item.product._id, Math.max(1, item.quantity - 1))} className="rounded-full p-2">
+                  <button
+                    type="button"
+                    disabled={activeProductId === item.product._id}
+                    onClick={() => void updateQuantity(item.product._id, Math.max(1, item.quantity - 1))}
+                    className="rounded-full p-2"
+                  >
                     <Minus className="h-4 w-4" />
                   </button>
                   <span className="min-w-10 text-center text-sm font-semibold">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.product._id, item.quantity + 1)} className="rounded-full p-2">
+                  <button
+                    type="button"
+                    disabled={activeProductId === item.product._id}
+                    onClick={() => void updateQuantity(item.product._id, item.quantity + 1)}
+                    className="rounded-full p-2"
+                  >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>

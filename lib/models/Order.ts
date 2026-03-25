@@ -24,6 +24,7 @@ const trackingEventSchema = new Schema(
 const addressSchema = new Schema(
   {
     fullName: String,
+    email: String,
     phone: String,
     line1: String,
     line2: String,
@@ -31,6 +32,15 @@ const addressSchema = new Schema(
     state: String,
     postalCode: String,
     country: { type: String, default: "India" }
+  },
+  { _id: false }
+);
+
+const customizationDetailsSchema = new Schema(
+  {
+    giftMessage: { type: String, trim: true, maxlength: 240 },
+    nameCustomization: { type: String, trim: true, maxlength: 120 },
+    specialInstructions: { type: String, trim: true, maxlength: 400 }
   },
   { _id: false }
 );
@@ -63,6 +73,7 @@ const orderSchema = new Schema(
       verifiedAt: Date
     },
     shippingAddress: addressSchema,
+    customizationDetails: customizationDetailsSchema,
     tracking: {
       trackingId: String,
       estimatedDelivery: Date,

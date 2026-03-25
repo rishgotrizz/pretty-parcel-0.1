@@ -33,7 +33,16 @@ export async function GET() {
       _id: order._id.toString(),
       status: order.status,
       total: order.total,
-      createdAt: new Date(order.createdAt).toISOString()
+      createdAt: new Date(order.createdAt).toISOString(),
+      customerName: order.shippingAddress?.fullName ?? "Customer",
+      itemCount: order.items?.length ?? 0,
+      customizationDetails: order.customizationDetails
+        ? {
+            giftMessage: order.customizationDetails.giftMessage ?? "",
+            nameCustomization: order.customizationDetails.nameCustomization ?? "",
+            specialInstructions: order.customizationDetails.specialInstructions ?? ""
+          }
+        : null
     }))
   });
 }

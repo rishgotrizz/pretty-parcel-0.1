@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
+import { useToast } from "@/components/providers/toast-provider";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatCurrency } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ export default function CheckoutPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const { pushToast } = useToast();
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -85,7 +87,21 @@ export default function CheckoutPage() {
       const payload = {
         checkoutSessionId,
         couponCode,
-        shippingAddress: Object.fromEntries(formData.entries())
+        shippingAddress: {
+          fullName: String(formData.get("fullName") ?? ""),
+          email: String(formData.get("email") ?? ""),
+          phone: String(formData.get("phone") ?? ""),
+          city: String(formData.get("city") ?? ""),
+          state: String(formData.get("state") ?? ""),
+          postalCode: String(formData.get("postalCode") ?? ""),
+          line1: String(formData.get("line1") ?? ""),
+          line2: String(formData.get("line2") ?? "")
+        },
+        customizationDetails: {
+          giftMessage: String(formData.get("giftMessage") ?? ""),
+          nameCustomization: String(formData.get("nameCustomization") ?? ""),
+          specialInstructions: String(formData.get("specialInstructions") ?? "")
+        }
       };
 
       const checkoutResponse = await fetch("/api/checkout", {
@@ -98,6 +114,7 @@ export default function CheckoutPage() {
       const checkoutData = checkoutRaw ? JSON.parse(checkoutRaw) : {};
       if (!checkoutResponse.ok) {
         setMessage(checkoutData.error ?? "Checkout failed.");
+        pushToast(checkoutData.error ?? "Checkout failed.", "error");
         return;
       }
 
@@ -111,6 +128,7 @@ export default function CheckoutPage() {
       const paymentData = paymentRaw ? JSON.parse(paymentRaw) : {};
       if (!paymentResponse.ok) {
         setMessage(paymentData.error ?? "Unable to start payment.");
+        pushToast(paymentData.error ?? "Unable to start payment.", "error");
         return;
       }
 
@@ -131,6 +149,7 @@ export default function CheckoutPage() {
         const verifyData = verifyRaw ? JSON.parse(verifyRaw) : {};
         if (!verifyResponse.ok) {
           setMessage(verifyData.error ?? "Payment verification failed.");
+          pushToast(verifyData.error ?? "Payment verification failed.", "error");
           return;
         }
         window.location.href = `/orders/${checkoutData.order._id}`;
@@ -165,6 +184,7 @@ export default function CheckoutPage() {
           const verifyData = verifyRaw ? JSON.parse(verifyRaw) : {};
           if (!verifyResponse.ok) {
             setMessage(verifyData.error ?? "Payment verification failed.");
+            pushToast(verifyData.error ?? "Payment verification failed.", "error");
             return;
           }
           window.location.href = `/orders/${checkoutData.order._id}`;
@@ -181,6 +201,7 @@ export default function CheckoutPage() {
               })
             });
             setMessage("Payment was cancelled. You can try again from checkout.");
+            pushToast("Payment was cancelled. You can try again from checkout.", "info");
           }
         },
         theme: {
@@ -200,12 +221,14 @@ export default function CheckoutPage() {
           })
         });
         setMessage(description || "Payment failed. Please try again.");
+        pushToast(description || "Payment failed. Please try again.", "error");
       });
 
       razorpay.open();
     } catch (error) {
       console.error("[CheckoutPage] checkout failed", error);
       setMessage("We couldn't complete checkout right now. Please try again.");
+      pushToast("We couldn't complete checkout right now. Please try again.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -277,6 +300,26 @@ export default function CheckoutPage() {
           placeholder="Promo code"
           className="w-full rounded-[1rem] border bg-white/90 px-4 py-3 text-sm outline-none"
         />
+        <div className="rounded-[1.5rem] bg-white/75 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rosewood/65">Customization details</p>
+          <div className="mt-4 grid gap-4">
+            <input
+              name="nameCustomization"
+              placeholder="Name customization"
+              className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm outline-none"
+            />
+            <textarea
+              name="giftMessage"
+              placeholder="Gift message"
+              className="min-h-24 rounded-[1rem] border bg-white/90 px-4 py-3 text-sm outline-none"
+            />
+            <textarea
+              name="specialInstructions"
+              placeholder="Special instructions for your order"
+              className="min-h-24 rounded-[1rem] border bg-white/90 px-4 py-3 text-sm outline-none"
+            />
+          </div>
+        </div>
         <button type="submit" disabled={submitting} className="button-primary w-full disabled:cursor-not-allowed disabled:opacity-60">
           {submitting ? "Processing..." : "Pay with Razorpay"}
         </button>
@@ -284,7 +327,7 @@ export default function CheckoutPage() {
           Supports test-mode UPI, cards, wallets, and net banking through Razorpay. If keys are missing, the app uses a
           safe mock payment flow for local preview.
         </p>
-        {message ? <p className="text-sm font-medium text-red-600">{message}</p> : null}
+        {message ? <p className="text-sm font-medium text-rosewood">{message}</p> : null}
       </form>
 
       <aside className="glass-panel rounded-[2rem] p-6">
@@ -324,6 +367,9 @@ export default function CheckoutPage() {
             </div>
           ) : null}
         </div>
+        <p className="mt-4 text-xs leading-6 text-rosewood/65">
+          Add gift notes, personalization names, or making instructions here so every parcel feels thoughtful and personal.
+        </p>
       </aside>
     </div>
   );

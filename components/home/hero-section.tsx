@@ -25,10 +25,10 @@ export function HeroSection({ flashSaleEndsAt }: { flashSaleEndsAt?: string }) {
           </div>
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <Button href="/products">
-              Shop the collection
+              Explore gifts
             </Button>
-            <Button href="/signup" variant="secondary">
-              Start your gifting account
+            <Button href="/terms" variant="secondary">
+              Policies
             </Button>
             {flashSaleEndsAt ? <FlashSaleTimer endsAt={flashSaleEndsAt} /> : null}
           </div>

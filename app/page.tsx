@@ -57,19 +57,10 @@ export default function HomePage() {
 
       <section className="section-shell mt-14 sm:mt-20">
         <div className="mb-8 space-y-3 sm:mb-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-pink-700/70">
-            Shop the collection
+          <h2 className="font-serif text-4xl text-slate-900 sm:text-5xl">Handmade gifts for every beautiful moment</h2>
+          <p className="max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
+            Browse bouquets, portraits, keychains, and keepsakes curated for a soft premium gifting experience.
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="font-serif text-4xl text-slate-900 sm:text-5xl">
-                Handmade gifts for every beautiful moment
-              </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
-                Browse bouquets, portraits, keychains, and keepsakes curated for a soft premium gifting experience.
-              </p>
-            </div>
-          </div>
         </div>
 
         {loading ? (

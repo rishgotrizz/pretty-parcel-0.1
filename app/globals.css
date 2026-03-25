@@ -180,3 +180,11 @@ h6 {
 .button-secondary {
   @apply ui-button ui-button-secondary;
 }
+
+.button-primary:disabled,
+.button-secondary:disabled,
+.ui-button:disabled {
+  @apply cursor-not-allowed opacity-60;
+  transform: none;
+  box-shadow: none;
+}

@@ -184,6 +184,27 @@ function buildProductWritePayload(data: z.infer<typeof productSchema>, slug: str
   };
 }
 
+function serialiseProduct(product: any) {
+  return {
+    _id: product._id.toString(),
+    name: product.name,
+    category: product.category,
+    shortDescription: product.shortDescription,
+    description: product.description,
+    stock: product.stock,
+    price: product.price,
+    compareAtPrice: product.compareAtPrice,
+    images: product.images ?? [],
+    tags: product.tags ?? [],
+    specifications: product.specifications ?? [],
+    customisationNotes: product.customisationNotes,
+    isFeatured: Boolean(product.isFeatured),
+    isActive: Boolean(product.isActive),
+    flashSalePrice: product.flashSale?.isActive ? product.flashSale?.price : undefined,
+    flashSaleEndsAt: product.flashSale?.endsAt ? new Date(product.flashSale.endsAt).toISOString().slice(0, 16) : ""
+  };
+}
+
 export async function GET() {
   const admin = await requireAdmin();
   if (admin instanceof Response) {
@@ -193,24 +214,7 @@ export async function GET() {
   await connectToDatabase();
   const products = await Product.find().sort({ createdAt: -1 }).lean();
   return Response.json({
-    products: (products as any[]).map((product) => ({
-      _id: product._id.toString(),
-      name: product.name,
-      category: product.category,
-      shortDescription: product.shortDescription,
-      description: product.description,
-      stock: product.stock,
-      price: product.price,
-      compareAtPrice: product.compareAtPrice,
-      images: product.images ?? [],
-      tags: product.tags ?? [],
-      specifications: product.specifications ?? [],
-      customisationNotes: product.customisationNotes,
-      isFeatured: Boolean(product.isFeatured),
-      isActive: Boolean(product.isActive),
-      flashSalePrice: product.flashSale?.price,
-      flashSaleEndsAt: product.flashSale?.endsAt ? new Date(product.flashSale.endsAt).toISOString().slice(0, 16) : ""
-    }))
+    products: (products as any[]).map((product) => serialiseProduct(product))
   });
 }
 
@@ -235,7 +239,7 @@ export async function POST(request: Request) {
       reviews: []
     });
 
-    return Response.json({ product: { _id: product._id.toString(), name: product.name } });
+    return Response.json({ product: serialiseProduct(product.toObject()) });
   } catch (error) {
     if (isDuplicateKeyError(error)) {
       return Response.json({ error: "A product with similar details already exists." }, { status: 409 });
@@ -272,11 +276,11 @@ export async function PATCH(request: Request) {
     }
 
     const slug = await buildUniqueSlug(parsed.data.name, parsed.data.id);
-    await Product.findByIdAndUpdate(parsed.data.id, {
+    const updatedProduct = await Product.findByIdAndUpdate(parsed.data.id, {
       ...buildProductWritePayload(parsed.data, slug)
-    });
+    }, { new: true, runValidators: true });
 
-    return Response.json({ success: true });
+    return Response.json({ success: true, product: updatedProduct ? serialiseProduct(updatedProduct.toObject()) : null });
   } catch (error) {
     if (isDuplicateKeyError(error)) {
       return Response.json({ error: "A product with similar details already exists." }, { status: 409 });
