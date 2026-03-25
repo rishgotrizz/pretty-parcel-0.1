@@ -39,6 +39,7 @@ export interface ProductType {
   stock: number;
   popularity: number;
   isFeatured: boolean;
+  isSpecial?: boolean;
   isActive: boolean;
   images: string[];
   specifications: string[];
@@ -63,7 +64,9 @@ export interface CartLine {
 
 export interface CouponSummary {
   code: string;
+  description?: string;
   type: CouponType;
   value: number;
+  minOrderValue?: number;
   autoApply: boolean;
 }

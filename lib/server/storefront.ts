@@ -4,6 +4,7 @@ import { Cart } from "@/lib/models/Cart";
 import { Coupon } from "@/lib/models/Coupon";
 import { Order } from "@/lib/models/Order";
 import { Product } from "@/lib/models/Product";
+import { AppSetting } from "@/lib/models/AppSetting";
 import { connectToDatabase } from "@/lib/server/db";
 import {
   pickBestCoupon,
@@ -99,6 +100,16 @@ export async function getCatalogProducts(): Promise<ProductType[]> {
   }
 }
 
+export async function getSpecialCategoryTitle() {
+  try {
+    await connectToDatabase();
+    const setting = await AppSetting.findOne({ key: "special-category-title" }).lean<any>();
+    return typeof setting?.value === "string" ? setting.value : "Special Picks";
+  } catch {
+    return "Special Picks";
+  }
+}
+
 export async function getHomePageData(userId?: string | null): Promise<{
   featured: ProductType[];
   flashSale: ProductType[];
@@ -183,7 +194,14 @@ export async function getUserCart(userId: string) {
   return {
     items,
     summary: buildPricingSummary({ subtotal, discount }),
-    appliedCoupon: coupon ? { code: coupon.code, discount } : null
+    appliedCoupon: coupon ? { code: coupon.code, discount, description: coupon.description ?? "", minOrderValue: coupon.minOrderValue ?? 0 } : null,
+    availableCoupons: validCoupons.map((item) => ({
+      code: item.code,
+      description: item.description ?? "",
+      minOrderValue: item.minOrderValue ?? 0,
+      type: item.type,
+      value: item.value
+    }))
   };
 }
 

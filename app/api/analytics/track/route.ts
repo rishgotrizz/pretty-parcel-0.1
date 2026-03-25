@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { AnalyticsEvent } from "@/lib/models/AnalyticsEvent";
+import { User } from "@/lib/models/User";
 import { logApiError, parseJsonBody } from "@/lib/server/api";
 import { getCurrentUser } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
@@ -35,6 +36,13 @@ export async function POST(request: Request) {
       metadata: parsed.data.metadata,
       durationMs: parsed.data.durationMs
     });
+
+    if (user?._id && parsed.data.eventType === "page_view") {
+      await User.findByIdAndUpdate(user._id, {
+        $inc: { visitCount: 1 },
+        $set: { lastSeenAt: new Date() }
+      });
+    }
 
     return Response.json({ success: true });
   } catch (error) {

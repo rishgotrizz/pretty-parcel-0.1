@@ -23,6 +23,7 @@ const productSchema = new Schema(
     stock: { type: Number, required: true, min: 0 },
     popularity: { type: Number, default: 0, index: true },
     isFeatured: { type: Boolean, default: false },
+    isSpecial: { type: Boolean, default: false, index: true },
     isActive: { type: Boolean, default: true },
     images: {
       type: [{ type: String, trim: true }],

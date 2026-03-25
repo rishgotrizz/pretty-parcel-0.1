@@ -36,7 +36,10 @@ export async function POST(request: Request) {
       preferences: {
         favoriteCategories: []
       },
-      lastSeenAt: new Date()
+      lastSeenAt: new Date(),
+      lastLogin: new Date(),
+      orderCount: 0,
+      visitCount: 1
     });
 
     await Cart.updateOne(

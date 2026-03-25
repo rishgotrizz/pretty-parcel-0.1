@@ -3,6 +3,7 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 const couponSchema = new Schema(
   {
     code: { type: String, required: true, unique: true, uppercase: true, trim: true, index: true },
+    description: { type: String, trim: true, maxlength: 180 },
     type: { type: String, enum: ["percentage", "fixed"], required: true },
     value: { type: Number, required: true, min: 0 },
     maxDiscount: { type: Number, min: 0 },

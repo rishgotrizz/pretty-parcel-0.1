@@ -28,7 +28,9 @@ export async function POST(request: Request) {
       return Response.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
-    user.lastSeenAt = new Date();
+    const now = new Date();
+    user.lastSeenAt = now;
+    user.lastLogin = now;
     await user.save();
 
     return createAuthResponse({

@@ -10,6 +10,7 @@ import type { ProductType } from "@/types";
 
 export default function HomePage() {
   const [products, setProducts] = useState<ProductType[]>([]);
+  const [specialCategoryTitle, setSpecialCategoryTitle] = useState("Special Picks");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function HomePage() {
 
         if (!cancelled) {
           setProducts(Array.isArray(data.products) ? data.products : []);
+          setSpecialCategoryTitle(typeof data.specialCategoryTitle === "string" ? data.specialCategoryTitle : "Special Picks");
         }
       } catch (error) {
         console.error("[HomePage] failed to load products", error);
@@ -47,6 +49,7 @@ export default function HomePage() {
   }, []);
 
   const featuredProducts = products.slice(0, 6);
+  const specialProducts = products.filter((product) => product.isSpecial).slice(0, 3);
   const flashSaleEndsAt = products.find((product) => product.flashSale?.isActive)?.flashSale?.endsAt;
 
   return (
@@ -96,6 +99,29 @@ export default function HomePage() {
           />
         )}
       </section>
+
+      {!loading && specialProducts.length ? (
+        <section className="section-shell mt-14 sm:mt-20">
+          <div className="mb-8 space-y-3 sm:mb-10">
+            <h2 className="font-serif text-4xl text-slate-900 sm:text-5xl">{specialCategoryTitle}</h2>
+            <p className="max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
+              Curated picks from the current campaign, highlighted by the admin for gifting moments that need extra sparkle.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {specialProducts.map((product) => (
+              <div key={`special-${product._id ?? product.slug}`} className="space-y-4">
+                <ProductCard product={product} />
+                {product._id ? (
+                  <div className="rounded-[1.75rem] border border-pink-100/80 bg-white/80 p-4 shadow-[var(--shadow-card)]">
+                    <ProductActions productId={product._id} productName={product.slug} category={product.category} />
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -7,8 +7,10 @@ import { connectToDatabase } from "@/lib/server/db";
 
 const couponSchema = z.object({
   code: z.string().trim().min(3).max(40),
+  description: z.string().trim().max(180).optional().or(z.literal("")),
   type: z.enum(["percentage", "fixed"]),
   value: z.coerce.number().min(1),
+  minOrderValue: z.coerce.number().min(0).optional(),
   autoApply: z.union([z.literal("true"), z.literal("false")]).optional()
 });
 
@@ -28,8 +30,10 @@ export async function GET() {
     coupons: (coupons as any[]).map((coupon) => ({
       _id: coupon._id.toString(),
       code: coupon.code,
+      description: coupon.description ?? "",
       type: coupon.type,
       value: coupon.value,
+      minOrderValue: coupon.minOrderValue ?? 0,
       autoApply: coupon.autoApply
     }))
   });
@@ -50,10 +54,11 @@ export async function POST(request: Request) {
     await connectToDatabase();
     const coupon = await Coupon.create({
       code: parsed.data.code.toUpperCase(),
+      description: parsed.data.description || undefined,
       type: parsed.data.type,
       value: parsed.data.value,
       autoApply: parsed.data.autoApply === "true",
-      minOrderValue: 999,
+      minOrderValue: parsed.data.minOrderValue ?? 0,
       isActive: true
     });
 
@@ -86,8 +91,10 @@ export async function PATCH(request: Request) {
     await connectToDatabase();
     const updated = await Coupon.findByIdAndUpdate(parsed.data.id, {
       code: parsed.data.code.toUpperCase(),
+      description: parsed.data.description || undefined,
       type: parsed.data.type,
       value: parsed.data.value,
+      minOrderValue: parsed.data.minOrderValue ?? 0,
       autoApply: parsed.data.autoApply === "true"
     });
     if (!updated) {

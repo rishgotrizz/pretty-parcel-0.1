@@ -40,6 +40,7 @@ const baseProductSchema = z.object({
   specifications: z.array(z.string()).default([]),
   customisationNotes: z.string().optional(),
   isFeatured: z.boolean().default(false),
+  isSpecial: z.boolean().default(false),
   isActive: z.boolean().default(true),
   flashSalePrice: z.coerce.number().positive("Flash sale price must be greater than 0.").optional(),
   flashSaleEndsAt: z.string().optional()
@@ -141,6 +142,7 @@ function normaliseProductPayload(payload: Record<string, unknown>) {
     specifications: toArray(payload.specifications),
     customisationNotes: String(payload.customisationNotes ?? "").trim() || undefined,
     isFeatured: toBoolean(payload.isFeatured),
+    isSpecial: toBoolean(payload.isSpecial),
     isActive: payload.isActive === undefined ? true : toBoolean(payload.isActive),
     flashSalePrice: toOptionalNumber(payload.flashSalePrice),
     flashSaleEndsAt: String(payload.flashSaleEndsAt ?? "").trim() || undefined
@@ -200,6 +202,7 @@ function buildProductWritePayload(data: z.infer<typeof productSchema>, slug: str
     tags: data.tags.length ? data.tags : [data.category.toLowerCase(), "handmade"],
     stock: data.stock,
     isFeatured: data.isFeatured,
+    isSpecial: data.isSpecial,
     isActive: data.isActive,
     images: data.images,
     specifications: data.specifications.length
@@ -230,6 +233,7 @@ function serialiseProduct(product: any) {
     specifications: product.specifications ?? [],
     customisationNotes: product.customisationNotes,
     isFeatured: Boolean(product.isFeatured),
+    isSpecial: Boolean(product.isSpecial),
     isActive: Boolean(product.isActive),
     flashSalePrice: product.flashSale?.isActive ? product.flashSale?.price : undefined,
     flashSaleEndsAt: product.flashSale?.endsAt ? new Date(product.flashSale.endsAt).toISOString().slice(0, 16) : ""

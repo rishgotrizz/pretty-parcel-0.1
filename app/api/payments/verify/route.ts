@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Cart } from "@/lib/models/Cart";
 import { Order } from "@/lib/models/Order";
 import { Product } from "@/lib/models/Product";
+import { User } from "@/lib/models/User";
 import { isDuplicateKeyError, isObjectId, logApiError, parseJsonBody } from "@/lib/server/api";
 import { requireUser } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
@@ -205,6 +206,7 @@ export async function POST(request: Request) {
       };
       await lockedOrder.save();
       await Cart.findOneAndUpdate({ user: user._id }, { $set: { items: [], couponCode: null } });
+      await User.findByIdAndUpdate(user._id, { $inc: { orderCount: 1 }, $set: { lastSeenAt: now } });
 
       return Response.json({
         success: true,
@@ -226,6 +228,7 @@ export async function POST(request: Request) {
     };
     await lockedOrder.save();
     await Cart.findOneAndUpdate({ user: user._id }, { $set: { items: [], couponCode: null } });
+    await User.findByIdAndUpdate(user._id, { $inc: { orderCount: 1 }, $set: { lastSeenAt: now } });
 
     return Response.json({
       success: true,

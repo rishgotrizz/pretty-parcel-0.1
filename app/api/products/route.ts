@@ -1,6 +1,6 @@
-import { getCatalogProducts } from "@/lib/server/storefront";
+import { getCatalogProducts, getSpecialCategoryTitle } from "@/lib/server/storefront";
 
 export async function GET() {
-  const products = await getCatalogProducts();
-  return Response.json({ products });
+  const [products, specialCategoryTitle] = await Promise.all([getCatalogProducts(), getSpecialCategoryTitle()]);
+  return Response.json({ products, specialCategoryTitle });
 }

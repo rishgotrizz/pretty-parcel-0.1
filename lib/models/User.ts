@@ -27,7 +27,12 @@ const userSchema = new Schema(
     preferences: {
       favoriteCategories: [{ type: String }]
     },
-    lastSeenAt: { type: Date }
+    lastSeenAt: { type: Date },
+    lastLogin: { type: Date, index: true },
+    orderCount: { type: Number, default: 0, min: 0 },
+    visitCount: { type: Number, default: 0, min: 0 },
+    notificationPermission: { type: String, enum: ["default", "granted", "denied"], default: "default" },
+    notificationPromptedAt: { type: Date }
   },
   {
     timestamps: true

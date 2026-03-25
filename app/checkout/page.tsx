@@ -20,7 +20,8 @@ declare global {
 type CheckoutCart = {
   items: Array<{ product: { name: string; images: string[]; slug: string; _id: string }; quantity: number; unitPrice: number }>;
   summary: { subtotal: number; discount: number; shippingFee: number; total: number };
-  appliedCoupon?: { code: string; discount: number } | null;
+  appliedCoupon?: { code: string; discount: number; description?: string; minOrderValue?: number } | null;
+  availableCoupons?: Array<{ code: string; description?: string; minOrderValue?: number; type: string; value: number }>;
   error?: string;
 };
 
@@ -30,7 +31,18 @@ export default function CheckoutPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const { pushToast } = useToast();
+
+  async function readJson(response: Response) {
+    try {
+      const raw = await response.text();
+      return raw ? JSON.parse(raw) : {};
+    } catch (error) {
+      console.error("[CheckoutPage] invalid API response", error);
+      return {};
+    }
+  }
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -42,6 +54,49 @@ export default function CheckoutPage() {
     };
   }, []);
 
+  async function applyCoupon(code: string) {
+    const normalizedCode = code.trim().toUpperCase();
+    if (!normalizedCode || applyingCoupon) {
+      return;
+    }
+
+    try {
+      setApplyingCoupon(true);
+      const response = await fetch(`/api/coupons/validate?code=${encodeURIComponent(normalizedCode)}`, {
+        credentials: "include",
+        headers: { Accept: "application/json" }
+      });
+      const data = await readJson(response);
+
+      if (!response.ok || !data.valid) {
+        pushToast(data.error ?? "Coupon is not valid for this cart.", "error");
+        return;
+      }
+
+      setCouponCode(normalizedCode);
+      setCart((current) =>
+        current
+          ? {
+              ...current,
+              appliedCoupon: {
+                code: data.coupon?.code ?? normalizedCode,
+                discount: typeof data.discount === "number" ? data.discount : 0,
+                description: data.coupon?.description ?? "",
+                minOrderValue: data.coupon?.minOrderValue ?? 0
+              }
+            }
+          : current
+      );
+      setMessage(`Coupon ${normalizedCode} will be applied at checkout.`);
+      pushToast(`Coupon ${normalizedCode} applied for checkout.`, "success");
+    } catch (error) {
+      console.error("[CheckoutPage] coupon apply failed", error);
+      pushToast("Could not apply coupon right now.", "error");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  }
+
   useEffect(() => {
     async function loadCart() {
       try {
@@ -50,9 +105,9 @@ export default function CheckoutPage() {
           credentials: "include",
           headers: { Accept: "application/json" }
         });
-        const raw = await response.text();
-        const data = raw ? JSON.parse(raw) : {};
+        const data = await readJson(response);
         setCart(data);
+        setCouponCode(typeof data.appliedCoupon?.code === "string" ? data.appliedCoupon.code : "");
       } catch (error) {
         console.error("[CheckoutPage] failed to load cart", error);
         setCart({
@@ -294,12 +349,63 @@ export default function CheckoutPage() {
             className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm outline-none sm:col-span-2"
           />
         </div>
-        <input
-          value={couponCode}
-          onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
-          placeholder="Promo code"
-          className="w-full rounded-[1rem] border bg-white/90 px-4 py-3 text-sm outline-none"
-        />
+        <div className="rounded-[1.5rem] bg-white/75 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rosewood/65">Available coupons</p>
+              <p className="mt-2 text-sm text-rosewood/75">
+                Apply an offer now and the best eligible discount will be used when your order is created.
+              </p>
+            </div>
+            {cart.appliedCoupon ? (
+              <span className="rounded-full bg-pink-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-pink-700">
+                Applied: {cart.appliedCoupon.code}
+              </span>
+            ) : null}
+          </div>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <input
+              value={couponCode}
+              onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+              placeholder="Enter coupon code"
+              className="w-full rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => void applyCoupon(couponCode)}
+              disabled={!couponCode.trim() || applyingCoupon}
+              className="button-secondary min-w-[10rem] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {applyingCoupon ? "Applying..." : "Apply coupon"}
+            </button>
+          </div>
+        </div>
+        {cart.availableCoupons?.length ? (
+          <div className="rounded-[1.5rem] bg-white/75 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rosewood/65">Available offers</p>
+            <div className="mt-4 space-y-3">
+              {cart.availableCoupons.map((coupon) => (
+                <div key={coupon.code} className="rounded-[1.25rem] bg-white/90 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-cocoa">{coupon.code}</p>
+                      {coupon.description ? <p className="mt-2 text-sm text-rosewood/75">{coupon.description}</p> : null}
+                      <p className="mt-2 text-xs text-rosewood/65">Valid on orders above {formatCurrency(coupon.minOrderValue ?? 0)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void applyCoupon(coupon.code)}
+                      disabled={applyingCoupon}
+                      className="button-secondary !py-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {applyingCoupon && couponCode === coupon.code ? "Applying..." : "Apply coupon"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <div className="rounded-[1.5rem] bg-white/75 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rosewood/65">Customization details</p>
           <div className="mt-4 grid gap-4">
@@ -364,6 +470,7 @@ export default function CheckoutPage() {
           {cart.appliedCoupon ? (
             <div className="rounded-[1.5rem] bg-rosewater p-4 text-xs text-rosewood">
               Best discount currently applied: <span className="font-semibold">{cart.appliedCoupon.code}</span>
+              {cart.appliedCoupon.description ? <span className="block pt-2">{cart.appliedCoupon.description}</span> : null}
             </div>
           ) : null}
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, MousePointerClick, Package, Percent, RefreshCcw, ShoppingBag, Sparkles, Users } from "lucide-react";
+import { AlertTriangle, BarChart3, MousePointerClick, Package, Percent, RefreshCcw, ShoppingBag, Sparkles, Trash2, Users } from "lucide-react";
 import { useEffect, useState, type ComponentType, type FormEvent } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
@@ -24,6 +24,7 @@ type ProductAdminItem = {
   specifications: string[];
   customisationNotes?: string;
   isFeatured: boolean;
+  isSpecial?: boolean;
   isActive: boolean;
   flashSalePrice?: number;
   flashSaleEndsAt?: string;
@@ -35,7 +36,9 @@ type DashboardPayload = {
       totalRevenue: number;
       totalUsers: number;
       newUsers: number;
+      activeUsers: number;
       repeatCustomers: number;
+      notificationSubscribers: number;
       totalOrders: number;
       totalProducts: number;
       paidOrders: number;
@@ -80,7 +83,10 @@ type DashboardPayload = {
       specialInstructions?: string;
     } | null;
   }>;
-  coupons: Array<{ _id: string; code: string; type: string; value: number; autoApply: boolean }>;
+  coupons: Array<{ _id: string; code: string; description?: string; type: string; value: number; minOrderValue?: number; autoApply: boolean }>;
+  marketing: {
+    specialCategoryTitle: string;
+  };
 };
 
 const topMetricCards = [
@@ -113,6 +119,7 @@ const blankProduct: ProductAdminItem = {
   specifications: [],
   customisationNotes: "",
   isFeatured: false,
+  isSpecial: false,
   isActive: true,
   flashSalePrice: undefined,
   flashSaleEndsAt: ""
@@ -162,6 +169,7 @@ function toFormValues(product: ProductAdminItem | null): ProductFormValues {
     specifications: value.specifications.join("\n"),
     customisationNotes: value.customisationNotes ?? "",
     isFeatured: value.isFeatured,
+    isSpecial: value.isSpecial ?? false,
     isActive: value.isActive,
     images: value.images ?? []
   };
@@ -178,6 +186,19 @@ export function AdminDashboard() {
   const [editingProduct, setEditingProduct] = useState<ProductAdminItem | null>(null);
   const [productFieldErrors, setProductFieldErrors] = useState<ProductFormFieldErrors>({});
   const [productResetSignal, setProductResetSignal] = useState(0);
+  const [specialCategoryTitle, setSpecialCategoryTitle] = useState("Special Picks");
+  const [marketingSaving, setMarketingSaving] = useState(false);
+  const [notificationSending, setNotificationSending] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationAudience, setNotificationAudience] = useState("all");
+  const [dangerZone, setDangerZone] = useState({
+    deleteProducts: false,
+    deleteOrders: false,
+    deleteUsers: false,
+    deleteCoupons: false
+  });
+  const [showDangerConfirm, setShowDangerConfirm] = useState(false);
+  const [deletingSelectedData, setDeletingSelectedData] = useState(false);
   const { pushToast } = useToast();
 
   async function readJson(response: Response) {
@@ -193,25 +214,31 @@ export function AdminDashboard() {
   async function loadDashboard() {
     try {
       setLoadingDashboard(true);
-      const [analyticsResponse, productsResponse, ordersResponse, couponsResponse] = await Promise.all([
+      const [analyticsResponse, productsResponse, ordersResponse, couponsResponse, marketingResponse] = await Promise.all([
         fetch("/api/admin/analytics", { credentials: "include", headers: { Accept: "application/json" } }),
         fetch("/api/admin/products", { credentials: "include", headers: { Accept: "application/json" } }),
         fetch("/api/admin/orders", { credentials: "include", headers: { Accept: "application/json" } }),
-        fetch("/api/admin/coupons", { credentials: "include", headers: { Accept: "application/json" } })
+        fetch("/api/admin/coupons", { credentials: "include", headers: { Accept: "application/json" } }),
+        fetch("/api/admin/marketing", { credentials: "include", headers: { Accept: "application/json" } })
       ]);
 
-      const [analytics, products, orders, coupons] = await Promise.all([
+      const [analytics, products, orders, coupons, marketing] = await Promise.all([
         readJson(analyticsResponse),
         readJson(productsResponse),
         readJson(ordersResponse),
-        readJson(couponsResponse)
+        readJson(couponsResponse),
+        readJson(marketingResponse)
       ]);
 
+      setSpecialCategoryTitle(marketing.specialCategoryTitle ?? "Special Picks");
       setData({
         analytics,
         products: products.products ?? [],
         orders: orders.orders ?? [],
-        coupons: coupons.coupons ?? []
+        coupons: coupons.coupons ?? [],
+        marketing: {
+          specialCategoryTitle: marketing.specialCategoryTitle ?? "Special Picks"
+        }
       });
     } catch (error) {
       console.error("[AdminDashboard] load failed", error);
@@ -257,6 +284,7 @@ export function AdminDashboard() {
           specifications: values.specifications,
           customisationNotes: values.customisationNotes,
           isFeatured: values.isFeatured,
+          isSpecial: values.isSpecial,
           isActive: values.isActive,
           images: values.images
         })
@@ -326,6 +354,54 @@ export function AdminDashboard() {
       pushToast("Could not save coupon.", "error");
     } finally {
       setSavingCoupon(false);
+    }
+  }
+
+  async function saveMarketingSettings() {
+    try {
+      setMarketingSaving(true);
+      const response = await fetch("/api/admin/marketing", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ specialCategoryTitle })
+      });
+      const result = await readJson(response);
+      if (!response.ok) {
+        pushToast(result.error ?? "Could not save special category.", "error");
+        return;
+      }
+      setData((current) => (current ? { ...current, marketing: { specialCategoryTitle: result.specialCategoryTitle } } : current));
+      pushToast("Special category updated.", "success");
+    } catch (error) {
+      console.error("[AdminDashboard] marketing save failed", error);
+      pushToast("Could not save special category.", "error");
+    } finally {
+      setMarketingSaving(false);
+    }
+  }
+
+  async function sendNotification() {
+    try {
+      setNotificationSending(true);
+      const response = await fetch("/api/admin/send-notification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ message: notificationMessage, audience: notificationAudience })
+      });
+      const result = await readJson(response);
+      if (!response.ok) {
+        pushToast(result.error ?? "Could not send notification.", "error");
+        return;
+      }
+      setNotificationMessage("");
+      pushToast(`Notification queued for ${result.recipients} users.`, "success");
+    } catch (error) {
+      console.error("[AdminDashboard] notification send failed", error);
+      pushToast("Could not send notification.", "error");
+    } finally {
+      setNotificationSending(false);
     }
   }
 
@@ -432,9 +508,55 @@ export function AdminDashboard() {
     }
   }
 
+  async function deleteSelectedData() {
+    try {
+      setDeletingSelectedData(true);
+      console.log("[DangerZone] confirm deletion", dangerZone);
+
+      const response = await fetch("/api/admin/delete-selected", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        credentials: "include",
+        body: JSON.stringify(dangerZone)
+      });
+      const result = await readJson(response);
+
+      if (!response.ok) {
+        setMessage(result.error ?? "Could not delete selected data.");
+        pushToast(result.error ?? "Could not delete selected data.", "error");
+        return;
+      }
+
+      setDangerZone({
+        deleteProducts: false,
+        deleteOrders: false,
+        deleteUsers: false,
+        deleteCoupons: false
+      });
+      setShowDangerConfirm(false);
+      clearProductForm();
+      setMessage("Selected data deleted successfully.");
+      pushToast("Selected data deleted successfully.", "success");
+      await loadDashboard();
+    } catch (error) {
+      console.error("[DangerZone] deletion failed", error);
+      setMessage("Could not delete selected data.");
+      pushToast("Could not delete selected data.", "error");
+    } finally {
+      setDeletingSelectedData(false);
+    }
+  }
+
   if (loadingDashboard || !data) {
     return <div className="section-shell py-14 text-sm text-rosewood/70">Loading admin dashboard...</div>;
   }
+
+  const selectedDangerItems = [
+    dangerZone.deleteProducts ? "Products" : null,
+    dangerZone.deleteOrders ? "Orders" : null,
+    dangerZone.deleteUsers ? "Users except admin" : null,
+    dangerZone.deleteCoupons ? "Coupons" : null
+  ].filter(Boolean) as string[];
 
   return (
     <div className="section-shell space-y-8 py-10">
@@ -475,6 +597,12 @@ export function AdminDashboard() {
             currency={"currency" in card && card.currency}
           />
         ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <ProductMetricCard label="Active users" value={data.analytics.summary.activeUsers} icon={Users} />
+        <ProductMetricCard label="Notification subscribers" value={data.analytics.summary.notificationSubscribers} icon={Sparkles} />
+        <ProductMetricCard label="Repeat customers" value={data.analytics.summary.repeatCustomers} icon={RefreshCcw} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
@@ -605,11 +733,14 @@ export function AdminDashboard() {
                         {product.stock} in stock
                       </span>
                       <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-rosewood">
-                        {product.isActive ? "Live" : "Hidden"}
-                      </span>
-                      {product.isFeatured ? (
-                        <span className="rounded-full bg-berry px-3 py-1 text-xs font-semibold text-white">Featured</span>
-                      ) : null}
+                          {product.isActive ? "Live" : "Hidden"}
+                        </span>
+                        {product.isSpecial ? (
+                          <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-pink-700">Special</span>
+                        ) : null}
+                        {product.isFeatured ? (
+                          <span className="rounded-full bg-berry px-3 py-1 text-xs font-semibold text-white">Featured</span>
+                        ) : null}
                     </div>
                     <div className="mt-4 flex gap-2">
                       <button type="button" onClick={() => {
@@ -637,16 +768,40 @@ export function AdminDashboard() {
 
       <OrderTable orders={data.orders} activeOrderId={activeOrderId} onStatusChange={(id, status) => void updateOrderStatus(id, status)} />
 
-      <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="glass-panel rounded-[2rem] border border-white/70 p-6">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Special category</p>
+          <h2 className="mt-2 font-serif text-3xl text-cocoa">Homepage merchandising</h2>
+          <div className="mt-5 space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-cocoa">Section title</label>
+              <input
+                value={specialCategoryTitle}
+                onChange={(event) => setSpecialCategoryTitle(event.target.value)}
+                className="w-full rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
+                placeholder="Valentine Specials"
+              />
+            </div>
+            <button type="button" disabled={marketingSaving} onClick={() => void saveMarketingSettings()} className="button-primary">
+              {marketingSaving ? "Saving..." : "Save special category"}
+            </button>
+            <p className="text-xs leading-6 text-rosewood/70">
+              This section appears on the homepage only when at least one product is marked as special.
+            </p>
+          </div>
+        </div>
+
         <div className="glass-panel rounded-[2rem] border border-white/70 p-6">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Create coupon</p>
           <form onSubmit={createCoupon} className="mt-6 grid gap-3 sm:grid-cols-2">
             <input name="code" required placeholder="Code" className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm" />
+            <input name="description" placeholder="Description" className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm" />
             <select name="type" className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm">
               <option value="percentage">Percentage</option>
               <option value="fixed">Fixed</option>
             </select>
             <input name="value" required type="number" placeholder="Value" className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm" />
+            <input name="minOrderValue" type="number" placeholder="Minimum order value" className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm" />
             <label className="flex items-center gap-2 rounded-[1rem] border bg-white/90 px-4 py-3 text-sm">
               <input name="autoApply" type="checkbox" value="true" />
               Auto apply
@@ -671,8 +826,9 @@ export function AdminDashboard() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-cocoa">{coupon.code}</p>
+                    {coupon.description ? <p className="mt-2 text-xs text-rosewood/70">{coupon.description}</p> : null}
                     <p className="mt-2 text-sm text-rosewood/70">
-                      {coupon.type} • {coupon.value}
+                      {coupon.type} • {coupon.value} • above {formatCurrency(coupon.minOrderValue ?? 0)}
                     </p>
                   </div>
                   {coupon.autoApply ? (
@@ -689,6 +845,143 @@ export function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      <div className="glass-panel rounded-[2rem] border border-white/70 p-6">
+        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Send notifications</p>
+        <h2 className="mt-2 font-serif text-3xl text-cocoa">Audience messaging</h2>
+        <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr_auto]">
+          <textarea
+            value={notificationMessage}
+            onChange={(event) => setNotificationMessage(event.target.value)}
+            placeholder="Tell shoppers about a flash sale, limited drop, or gift reminder..."
+            className="min-h-24 rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
+          />
+          <select
+            value={notificationAudience}
+            onChange={(event) => setNotificationAudience(event.target.value)}
+            className="rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
+          >
+            <option value="all">All users</option>
+            <option value="frequentVisitors">Frequent visitors</option>
+            <option value="customers">Customers</option>
+            <option value="newUsers">New users</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => void sendNotification()}
+            disabled={!notificationMessage.trim() || notificationSending}
+            className="button-primary h-fit"
+          >
+            {notificationSending ? "Sending..." : "Send notification"}
+          </button>
+        </div>
+      </div>
+
+      <section className="rounded-[2rem] border border-rose-200 bg-gradient-to-br from-rose-50/95 via-white to-rose-100/90 p-6 shadow-[var(--shadow-card)]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-rose-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-rose-700">
+              <AlertTriangle className="h-4 w-4" />
+              Danger Zone
+            </div>
+            <h2 className="mt-4 font-serif text-3xl text-rose-900">Delete selected data safely</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-rose-800/80">
+              Select exactly what you want to remove. This action is destructive, double-confirmed, and logged to the console for safety.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDangerConfirm(true)}
+            disabled={!selectedDangerItems.length || deletingSelectedData}
+            className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-full border border-rose-300 bg-rose-600 px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Trash2 className="h-4 w-4" />
+            {deletingSelectedData ? "Deleting..." : "Delete Selected Data"}
+          </button>
+        </div>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            { key: "deleteProducts", label: "Delete all products" },
+            { key: "deleteOrders", label: "Delete all orders" },
+            { key: "deleteUsers", label: "Delete all users (except admin)" },
+            { key: "deleteCoupons", label: "Delete coupons" }
+          ].map((item) => {
+            const checked = dangerZone[item.key as keyof typeof dangerZone];
+            return (
+              <label
+                key={item.key}
+                className={`flex cursor-pointer items-center gap-3 rounded-[1.5rem] border px-4 py-4 text-sm font-medium transition ${
+                  checked
+                    ? "border-rose-300 bg-rose-100/90 text-rose-900 shadow-sm"
+                    : "border-rose-200 bg-white/80 text-rose-800/80"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(event) =>
+                    setDangerZone((current) => ({
+                      ...current,
+                      [item.key]: event.target.checked
+                    }))
+                  }
+                  className="h-4 w-4 accent-rose-600"
+                />
+                <span>{item.label}</span>
+              </label>
+            );
+          })}
+        </div>
+      </section>
+
+      {showDangerConfirm ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-cocoa/45 px-4 py-6" onClick={() => setShowDangerConfirm(false)}>
+          <div
+            className="glass-panel w-full max-w-xl rounded-[2rem] border border-rose-200 p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-700">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-rose-700/80">Confirm deletion</p>
+                <h3 className="mt-2 font-serif text-3xl text-rose-900">Are you sure you want to delete selected data?</h3>
+                <p className="mt-3 text-sm leading-7 text-rose-800/80">
+                  This action cannot be undone. Selected data groups will be permanently removed.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-[1.5rem] bg-rose-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-700/80">Selected items</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {selectedDangerItems.map((item) => (
+                  <span key={item} className="rounded-full bg-white px-3 py-2 text-sm font-semibold text-rose-900 shadow-sm">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button type="button" onClick={() => setShowDangerConfirm(false)} className="button-secondary">
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void deleteSelectedData()}
+                disabled={deletingSelectedData}
+                className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-full bg-rose-600 px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Trash2 className="h-4 w-4" />
+                {deletingSelectedData ? "Deleting..." : "Confirm deletion"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

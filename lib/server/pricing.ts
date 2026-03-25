@@ -2,6 +2,7 @@ import type { CouponType, ProductType } from "@/types";
 
 type CouponLike = {
   code: string;
+  description?: string | null;
   type: CouponType;
   value: number;
   maxDiscount?: number | null;

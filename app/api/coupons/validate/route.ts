@@ -34,8 +34,10 @@ export async function GET(request: Request) {
     discount,
     coupon: {
       code: coupon.code,
+      description: coupon.description ?? "",
       type: coupon.type,
       value: coupon.value,
+      minOrderValue: coupon.minOrderValue ?? 0,
       autoApply: coupon.autoApply
     }
   });

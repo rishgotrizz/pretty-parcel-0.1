@@ -21,6 +21,7 @@ export type ProductFormValues = {
   specifications: string;
   customisationNotes: string;
   isFeatured: boolean;
+  isSpecial: boolean;
   isActive: boolean;
   images: string[];
 };
@@ -329,6 +330,14 @@ export function ProductForm({
                   onChange={(event) => updateField("isFeatured", event.target.checked)}
                 />
                 Featured product
+              </label>
+              <label className="flex items-center gap-2 rounded-[1rem] border border-pink-100 bg-white px-4 py-3 text-sm text-rosewood">
+                <input
+                  checked={draft.isSpecial}
+                  type="checkbox"
+                  onChange={(event) => updateField("isSpecial", event.target.checked)}
+                />
+                Include in special category
               </label>
               <label className="flex items-center gap-2 rounded-[1rem] border border-pink-100 bg-white px-4 py-3 text-sm text-rosewood">
                 <input
