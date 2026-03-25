@@ -50,3 +50,23 @@ export function normalizeOrderStatus(status: string) {
 export function formatOrderStatus(status: string) {
   return normalizeOrderStatus(status).replaceAll("_", " ");
 }
+
+export function getCustomerLevel(orderCount: number) {
+  if (orderCount >= 20) {
+    return 5;
+  }
+  if (orderCount >= 10) {
+    return 4;
+  }
+  if (orderCount >= 5) {
+    return 3;
+  }
+  if (orderCount >= 2) {
+    return 2;
+  }
+  return 1;
+}
+
+export function formatCustomerLevel(level: number) {
+  return `Level ${level} Customer`;
+}

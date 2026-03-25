@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       lastSeenAt: new Date(),
       lastLogin: new Date(),
       orderCount: 0,
+      level: 1,
       visitCount: 1
     });
 
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
       email: user.email,
       role: user.role,
       name: user.name,
+      level: user.level,
       wishlist: []
     });
   } catch (error) {

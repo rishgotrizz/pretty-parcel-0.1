@@ -4,11 +4,12 @@ import { Order } from "@/lib/models/Order";
 import { Product } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
 import { connectToDatabase } from "@/lib/server/db";
+import { getCustomerLevel } from "@/lib/utils";
 
 export async function buildAdminAnalytics() {
   await connectToDatabase();
 
-  const [orders, events, carts, totalUsers, totalProducts, totalOrders, newUsers, activeUsers, notificationSubscribers, rewardsGiven, mostViewedProducts] = await Promise.all([
+  const [orders, events, carts, totalUsers, totalProducts, totalOrders, newUsers, activeUsers, notificationSubscribers, rewardsGiven, mostViewedProducts, topCustomers] = await Promise.all([
     Order.find().sort({ createdAt: -1 }).lean(),
     AnalyticsEvent.find().sort({ createdAt: -1 }).limit(500).lean(),
     Cart.find().lean(),
@@ -33,6 +34,11 @@ export async function buildAdminAnalytics() {
       .sort({ views: -1, popularity: -1 })
       .limit(5)
       .select("name slug views")
+      .lean<any[]>(),
+    User.find({ role: { $in: ["customer", "user"] } })
+      .sort({ orderCount: -1, createdAt: -1 })
+      .limit(6)
+      .select("name email orderCount level")
       .lean<any[]>()
   ]);
 
@@ -119,6 +125,12 @@ export async function buildAdminAnalytics() {
       name: product.name,
       slug: product.slug,
       views: product.views ?? 0
+    })),
+    customerLevels: topCustomers.map((customer) => ({
+      name: customer.name,
+      email: customer.email,
+      orderCount: customer.orderCount ?? 0,
+      level: typeof customer.level === "number" ? customer.level : getCustomerLevel(customer.orderCount ?? 0)
     }))
   };
 }

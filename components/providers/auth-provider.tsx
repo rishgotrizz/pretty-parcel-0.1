@@ -7,6 +7,7 @@ type AuthUser = {
   name: string;
   email: string;
   role: "user" | "customer" | "admin";
+  level?: number;
   wishlist?: string[];
   notificationPermission?: "default" | "granted" | "denied";
   notificationEnabled?: boolean;

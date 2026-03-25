@@ -59,6 +59,7 @@ type DashboardPayload = {
     };
     revenueTrend: Array<{ date: string; revenue: number }>;
     topViewedProducts: Array<{ name: string; slug: string; views: number }>;
+    customerLevels: Array<{ name: string; email: string; orderCount: number; level: number }>;
   };
   products: ProductAdminItem[];
   orders: Array<{
@@ -686,6 +687,34 @@ export function AdminDashboard() {
               ) : (
                 <div className="rounded-[1.25rem] bg-white/85 px-4 py-3 text-sm text-rosewood/70">
                   Product view insights will appear as shoppers browse.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-rosewood/60">Customer levels</p>
+            <div className="mt-4 space-y-3">
+              {data.analytics.customerLevels.length ? (
+                data.analytics.customerLevels.map((customer) => (
+                  <div key={customer.email} className="flex flex-col gap-2 rounded-[1.25rem] bg-white/85 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-cocoa">{customer.name}</p>
+                      <p className="truncate text-xs text-rosewood/65">{customer.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-rosewater px-3 py-1 text-xs font-semibold text-rosewood">
+                        Level {customer.level} 💖
+                      </span>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-rosewood">
+                        {customer.orderCount} orders
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-[1.25rem] bg-white/85 px-4 py-3 text-sm text-rosewood/70">
+                  Customer levels will appear once shoppers begin placing orders.
                 </div>
               )}
             </div>

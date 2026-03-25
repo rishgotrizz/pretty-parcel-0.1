@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/server/auth";
 import { getUserOrders } from "@/lib/server/storefront";
-import { formatDate } from "@/lib/utils";
+import { formatCustomerLevel, formatDate } from "@/lib/utils";
 
 export default async function AccountPage() {
   const user = await getCurrentUser();
@@ -18,8 +18,14 @@ export default async function AccountPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-rosewood/70">Profile</p>
         <h1 className="mt-3 font-serif text-4xl text-cocoa">{user.name}</h1>
         <p className="mt-2 text-sm text-rosewood/70">{user.email}</p>
+        <div className="mt-4 inline-flex rounded-full bg-rosewater px-4 py-2 text-sm font-semibold text-rosewood">
+          {formatCustomerLevel(user.level ?? 1)} 💖
+        </div>
         <div className="mt-6 rounded-[1.5rem] bg-white/80 p-4 text-sm text-rosewood/80">
           Wishlist items saved: <span className="font-semibold text-cocoa">{user.wishlist?.length ?? 0}</span>
+        </div>
+        <div className="mt-4 rounded-[1.5rem] bg-white/80 p-4 text-sm text-rosewood/80">
+          Orders placed: <span className="font-semibold text-cocoa">{orders.length}</span>
         </div>
       </div>
 

@@ -30,6 +30,7 @@ const userSchema = new Schema(
     lastSeenAt: { type: Date },
     lastLogin: { type: Date, index: true },
     orderCount: { type: Number, default: 0, min: 0 },
+    level: { type: Number, default: 1, min: 1, max: 5 },
     visitCount: { type: Number, default: 0, min: 0 },
     notificationPermission: { type: String, enum: ["default", "granted", "denied"], default: "default" },
     notificationPromptedAt: { type: Date },

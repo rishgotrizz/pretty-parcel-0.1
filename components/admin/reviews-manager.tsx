@@ -41,6 +41,10 @@ export function ReviewsManager() {
         });
         const raw = await response.text();
         const data = raw ? JSON.parse(raw) : {};
+        console.debug("[ReviewsManager] loaded reviews", {
+          ok: response.ok,
+          count: Array.isArray(data.reviews) ? data.reviews.length : 0
+        });
         setReviews(Array.isArray(data.reviews) ? data.reviews : []);
       } catch (error) {
         console.error("[ReviewsManager] load failed", error);
@@ -84,6 +88,10 @@ export function ReviewsManager() {
       });
       const raw = await response.text();
       const data = raw ? JSON.parse(raw) : {};
+      console.debug("[ReviewsManager] add review response", {
+        ok: response.ok,
+        id: data.review?._id
+      });
 
       if (!response.ok) {
         pushToast(data.error ?? "Could not save review.", "error");

@@ -12,7 +12,7 @@ export type ReviewCard = {
   imageUrl?: string;
 };
 
-export function ReviewsSection({ reviews }: { reviews: ReviewCard[] }) {
+export function ReviewsSection({ reviews, loading = false }: { reviews: ReviewCard[]; loading?: boolean }) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -34,10 +34,6 @@ export function ReviewsSection({ reviews }: { reviews: ReviewCard[] }) {
       window.clearInterval(intervalId);
     };
   }, [reviews.length]);
-
-  if (!reviews.length) {
-    return null;
-  }
 
   const scrollByAmount = (direction: "left" | "right") => {
     const scroller = scrollerRef.current;
@@ -72,32 +68,55 @@ export function ReviewsSection({ reviews }: { reviews: ReviewCard[] }) {
         </div>
       </div>
 
-      <div
-        ref={scrollerRef}
-        className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {reviews.map((review) => (
-          <Card
-            key={review._id}
-            className="min-w-[84%] snap-start rounded-[2rem] border border-pink-100/80 bg-gradient-to-b from-white/95 to-rosewater/70 p-5 shadow-[var(--shadow-card)] sm:min-w-[420px]"
-          >
-            <div className="flex items-center gap-2 text-pink-600">
-              <Heart className="h-4 w-4 fill-current" />
-              <Heart className="h-4 w-4 fill-current" />
-              <Heart className="h-4 w-4 fill-current" />
+      {loading ? (
+        <div className="flex gap-6 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div
+              key={index}
+              className="min-w-[84%] animate-pulse rounded-[2rem] border border-pink-100/80 bg-white/80 p-5 shadow-[var(--shadow-card)] sm:min-w-[420px]"
+            >
+              <div className="h-4 w-24 rounded-full bg-pink-100" />
+              <div className="mt-5 h-4 w-full rounded-full bg-pink-100" />
+              <div className="mt-3 h-4 w-4/5 rounded-full bg-pink-100" />
+              <div className="mt-8 h-10 w-32 rounded-full bg-pink-100" />
             </div>
-            <p className="mt-4 text-sm leading-7 text-rosewood/85">{review.text}</p>
-            {review.imageUrl ? (
-              <img
-                src={review.imageUrl}
-                alt={`${review.name} review`}
-                className="mt-5 h-44 w-full rounded-[1.5rem] object-cover"
-              />
-            ) : null}
-            <p className="mt-5 font-semibold text-cocoa">{review.name}</p>
-          </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : reviews.length ? (
+        <div
+          ref={scrollerRef}
+          className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {reviews.map((review) => (
+            <Card
+              key={review._id}
+              className="min-w-[84%] snap-start rounded-[2rem] border border-pink-100/80 bg-gradient-to-b from-white/95 to-rosewater/70 p-5 shadow-[var(--shadow-card)] sm:min-w-[420px]"
+            >
+              <div className="flex items-center gap-2 text-pink-600">
+                <Heart className="h-4 w-4 fill-current" />
+                <Heart className="h-4 w-4 fill-current" />
+                <Heart className="h-4 w-4 fill-current" />
+              </div>
+              <p className="mt-4 text-sm leading-7 text-rosewood/85">{review.text}</p>
+              {review.imageUrl ? (
+                <img
+                  src={review.imageUrl}
+                  alt={`${review.name} review`}
+                  className="mt-5 h-44 w-full rounded-[1.5rem] object-cover"
+                />
+              ) : null}
+              <p className="mt-5 font-semibold text-cocoa">{review.name}</p>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card className="rounded-[2rem] border border-pink-100/80 bg-gradient-to-b from-white/95 to-rosewater/70 p-6 text-center shadow-[var(--shadow-card)]">
+          <p className="font-serif text-2xl text-cocoa">No reviews yet. Be the first!</p>
+          <p className="mt-3 text-sm leading-7 text-rosewood/75">
+            Once customers start sharing their gifting moments, they’ll appear here in a beautiful scrolling gallery.
+          </p>
+        </Card>
+      )}
     </section>
   );
 }

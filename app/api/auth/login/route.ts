@@ -4,6 +4,7 @@ import { User } from "@/lib/models/User";
 import { logApiError, parseJsonBody } from "@/lib/server/api";
 import { createAuthResponse, verifyPassword } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
+import { getCustomerLevel } from "@/lib/utils";
 
 const loginSchema = z.object({
   email: z.string().trim().email(),
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
     const now = new Date();
     user.lastSeenAt = now;
     user.lastLogin = now;
+    user.level = getCustomerLevel(user.orderCount ?? 0);
     await user.save();
 
     return createAuthResponse({
@@ -38,6 +40,7 @@ export async function POST(request: Request) {
       email: user.email,
       role: user.role,
       name: user.name,
+      level: user.level,
       wishlist: user.wishlist?.map((item: { toString(): string }) => item.toString()) ?? []
     });
   } catch (error) {

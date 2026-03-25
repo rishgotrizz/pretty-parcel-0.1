@@ -10,6 +10,7 @@ import { requireUser } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
 import { getEnv } from "@/lib/server/env";
 import { verifyRazorpaySignature } from "@/lib/server/razorpay";
+import { getCustomerLevel } from "@/lib/utils";
 
 const verifySchema = z.object({
   orderId: z.string(),
@@ -55,6 +56,19 @@ async function reserveInventory(
   }
 
   return true;
+}
+
+async function updateUserOrderProgress(userId: string, now: Date) {
+  const currentUser = await User.findById(userId).select("orderCount");
+  if (!currentUser) {
+    return;
+  }
+
+  const nextOrderCount = (currentUser.orderCount ?? 0) + 1;
+  currentUser.orderCount = nextOrderCount;
+  currentUser.level = getCustomerLevel(nextOrderCount);
+  currentUser.lastSeenAt = now;
+  await currentUser.save();
 }
 
 export async function POST(request: Request) {
@@ -206,7 +220,7 @@ export async function POST(request: Request) {
       };
       await lockedOrder.save();
       await Cart.findOneAndUpdate({ user: user._id }, { $set: { items: [], couponCode: null } });
-      await User.findByIdAndUpdate(user._id, { $inc: { orderCount: 1 }, $set: { lastSeenAt: now } });
+      await updateUserOrderProgress(user._id, now);
 
       return Response.json({
         success: true,
@@ -228,7 +242,7 @@ export async function POST(request: Request) {
     };
     await lockedOrder.save();
     await Cart.findOneAndUpdate({ user: user._id }, { $set: { items: [], couponCode: null } });
-    await User.findByIdAndUpdate(user._id, { $inc: { orderCount: 1 }, $set: { lastSeenAt: now } });
+    await updateUserOrderProgress(user._id, now);
 
     return Response.json({
       success: true,

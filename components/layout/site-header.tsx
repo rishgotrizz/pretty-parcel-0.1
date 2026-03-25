@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "@/components/providers/auth-provider";
 import { useBranding } from "@/components/providers/brand-provider";
+import { formatCustomerLevel } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -80,6 +81,11 @@ export function SiteHeader() {
           <div>
             <p className="font-serif text-2xl leading-none text-cocoa">The Pretty Parcel</p>
             <p className="text-[11px] tracking-[0.18em] text-rosewood/70">alot of 💗 by prachi</p>
+            {user && user.role !== "admin" ? (
+              <p className="mt-1 text-[11px] font-semibold tracking-[0.12em] text-pink-600/80">
+                {formatCustomerLevel(user.level ?? 1)} 💖
+              </p>
+            ) : null}
           </div>
         </Link>
 
@@ -165,6 +171,11 @@ export function SiteHeader() {
       >
         <div className="glass-panel mb-4 rounded-[1.75rem] p-5">
           <div className="flex flex-col gap-4">
+            {user && user.role !== "admin" ? (
+              <div className="rounded-[1rem] bg-rosewater px-4 py-3 text-sm font-semibold text-rosewood">
+                {formatCustomerLevel(user.level ?? 1)} 💖
+              </div>
+            ) : null}
             {navigation.map((item) => (
               <Link
                 key={item.href}

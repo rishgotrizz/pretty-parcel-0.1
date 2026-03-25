@@ -13,6 +13,7 @@ import type { StoreReview } from "@/types";
 export default function HomePage() {
   const { products, specialCategoryTitle, loading } = useProductsFeed();
   const [reviews, setReviews] = useState<StoreReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,6 +26,10 @@ export default function HomePage() {
         });
         const reviewsRaw = await response.text();
         const reviewsData = reviewsRaw ? JSON.parse(reviewsRaw) : {};
+        console.debug("[HomePage] reviews response", {
+          ok: response.ok,
+          count: Array.isArray(reviewsData.reviews) ? reviewsData.reviews.length : 0
+        });
 
         if (!cancelled) {
           setReviews(Array.isArray(reviewsData.reviews) ? reviewsData.reviews : []);
@@ -33,6 +38,10 @@ export default function HomePage() {
         console.error("[HomePage] failed to load reviews", error);
         if (!cancelled) {
           setReviews([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setReviewsLoading(false);
         }
       }
     }
@@ -119,7 +128,7 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      {!loading ? <ReviewsSection reviews={reviews} /> : null}
+      <ReviewsSection reviews={reviews} loading={reviewsLoading} />
     </div>
   );
 }

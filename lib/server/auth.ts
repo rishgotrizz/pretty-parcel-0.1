@@ -20,6 +20,7 @@ export type CurrentUser = {
   name: string;
   email: string;
   role: "user" | "customer" | "admin";
+  level?: number;
   wishlist: string[];
   notificationPermission?: "default" | "granted" | "denied";
   notificationEnabled?: boolean;
@@ -60,7 +61,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     const payload = await verifyAuthToken(token);
     await connectToDatabase();
     const user = await User.findById(payload.userId)
-      .select("name email role wishlist notificationPermission notificationEnabled notificationRewardClaimed")
+      .select("name email role level wishlist notificationPermission notificationEnabled notificationRewardClaimed")
       .lean<any>();
     if (!user) {
       return null;
@@ -71,6 +72,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       name: user.name,
       email: user.email,
       role: user.role,
+      level: typeof user.level === "number" ? user.level : 1,
       notificationPermission: user.notificationPermission ?? "default",
       notificationEnabled: Boolean(user.notificationEnabled),
       notificationRewardClaimed: Boolean(user.notificationRewardClaimed),
@@ -105,6 +107,7 @@ export async function createAuthResponse(user: {
   role: "user" | "customer" | "admin";
   email: string;
   name?: string;
+  level?: number;
   wishlist?: string[];
 }) {
   const token = await signAuthToken({
