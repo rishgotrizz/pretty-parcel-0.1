@@ -17,7 +17,7 @@ async function registerNotificationWorker() {
 }
 
 export function NotificationCenter() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const { pushToast } = useToast();
   const [visible, setVisible] = useState(false);
   const [requesting, setRequesting] = useState(false);
@@ -30,8 +30,11 @@ export function NotificationCenter() {
     return (
       Boolean(user) &&
       "Notification" in window &&
-      Notification.permission === "default" &&
-      window.localStorage.getItem(PROMPT_KEY) !== "true"
+      !user.notificationRewardClaimed &&
+      (
+        (Notification.permission === "default" && window.localStorage.getItem(PROMPT_KEY) !== "true") ||
+        (Notification.permission === "granted" && !user.notificationEnabled)
+      )
     );
   }, [user]);
 
@@ -99,31 +102,40 @@ export function NotificationCenter() {
 
     try {
       setRequesting(true);
-      const permission = await Notification.requestPermission();
-      window.localStorage.setItem(PROMPT_KEY, "true");
-      setVisible(false);
+      const permission = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
 
       if (permission !== "granted") {
-        pushToast("Notifications were not enabled.", "info");
+        window.localStorage.setItem(PROMPT_KEY, "true");
+        setVisible(false);
+        pushToast("Please allow notifications to receive reward.", "info");
         return;
       }
 
       await registerNotificationWorker();
 
-      const response = await fetch("/api/notifications/subscribe", {
+      const response = await fetch("/api/reward-notification", {
         method: "POST",
         credentials: "include",
-        headers: { Accept: "application/json" }
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ permission })
       });
       const raw = await response.text();
       const data = raw ? JSON.parse(raw) : {};
+      window.localStorage.setItem(PROMPT_KEY, "true");
+      setVisible(false);
 
       if (!response.ok) {
         pushToast(data.error ?? "Could not enable notifications.", "error");
         return;
       }
 
-      pushToast("You received Rs.10 reward coupon!", "success");
+      await refresh();
+      if (data.alreadyClaimed) {
+        pushToast("Your notification reward has already been claimed.", "info");
+        return;
+      }
+
+      pushToast("You received Rs.100 reward coupon!", "success");
     } catch (error) {
       console.error("[NotificationCenter] permission request failed", error);
       pushToast("Could not enable notifications.", "error");
@@ -143,15 +155,15 @@ export function NotificationCenter() {
           <Bell className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-cocoa">Allow notifications and get Rs.10 reward</p>
+          <p className="text-sm font-semibold text-cocoa">Enable notifications & get Rs.100 coupon</p>
           <p className="mt-2 text-sm leading-6 text-rosewood/75">
-            Enable notifications once to hear about offers, drops, and receive your `WELCOME10` coupon.
+            Turn on browser notifications to hear about offers, drops, and unlock your one-time `NOTIFY100` reward.
           </p>
         </div>
       </div>
       <button type="button" onClick={() => void enableNotifications()} disabled={requesting} className="button-primary mt-4 w-full">
         <Gift className="h-4 w-4" />
-        {requesting ? "Enabling..." : "Allow Notifications"}
+        {requesting ? "Checking permission..." : "Enable notifications & get Rs.100 coupon"}
       </button>
     </div>
   );

@@ -5,7 +5,7 @@ import { isCouponCurrentlyActive } from "@/lib/server/pricing";
 export async function GET() {
   await connectToDatabase();
   const coupons = await Coupon.find({ isActive: true }).sort({ createdAt: -1 }).lean<any[]>();
-  const validCoupons = coupons.filter((coupon) => isCouponCurrentlyActive(coupon));
+  const validCoupons = coupons.filter((coupon) => isCouponCurrentlyActive(coupon) && !coupon.issuedToUsers?.length);
 
   return Response.json({
     coupons: validCoupons.map((coupon) => ({

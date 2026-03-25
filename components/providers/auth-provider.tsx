@@ -6,8 +6,11 @@ type AuthUser = {
   _id: string;
   name: string;
   email: string;
-  role: "customer" | "admin";
+  role: "user" | "customer" | "admin";
   wishlist?: string[];
+  notificationPermission?: "default" | "granted" | "denied";
+  notificationEnabled?: boolean;
+  notificationRewardClaimed?: boolean;
 };
 
 type AuthContextValue = {

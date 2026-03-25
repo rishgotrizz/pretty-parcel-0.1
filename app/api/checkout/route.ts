@@ -9,6 +9,7 @@ import { connectToDatabase } from "@/lib/server/db";
 import {
   buildPricingSummary,
   getProductEffectivePrice,
+  isCouponAssignedToUser,
   isCouponCurrentlyActive,
   pickBestCoupon
 } from "@/lib/server/pricing";
@@ -147,7 +148,9 @@ export async function POST(request: Request) {
       ]
     }).lean();
 
-    const eligibleCoupons = (coupons as any[]).filter((coupon) => isCouponCurrentlyActive(coupon));
+    const eligibleCoupons = (coupons as any[]).filter(
+      (coupon) => isCouponCurrentlyActive(coupon) && isCouponAssignedToUser(coupon, user._id)
+    );
     const { coupon, discount } = pickBestCoupon(
       subtotal,
       validItems.map((item) => item.category),

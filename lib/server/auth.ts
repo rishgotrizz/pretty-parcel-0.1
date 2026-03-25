@@ -11,7 +11,7 @@ const AUTH_COOKIE = "pretty_parcel_token";
 
 type AuthToken = {
   userId: string;
-  role: "customer" | "admin";
+  role: "user" | "customer" | "admin";
   email: string;
 };
 
@@ -19,8 +19,11 @@ export type CurrentUser = {
   _id: string;
   name: string;
   email: string;
-  role: "customer" | "admin";
+  role: "user" | "customer" | "admin";
   wishlist: string[];
+  notificationPermission?: "default" | "granted" | "denied";
+  notificationEnabled?: boolean;
+  notificationRewardClaimed?: boolean;
 };
 
 export async function hashPassword(password: string) {
@@ -56,7 +59,9 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   try {
     const payload = await verifyAuthToken(token);
     await connectToDatabase();
-    const user = await User.findById(payload.userId).select("name email role wishlist").lean<any>();
+    const user = await User.findById(payload.userId)
+      .select("name email role wishlist notificationPermission notificationEnabled notificationRewardClaimed")
+      .lean<any>();
     if (!user) {
       return null;
     }
@@ -66,6 +71,9 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       name: user.name,
       email: user.email,
       role: user.role,
+      notificationPermission: user.notificationPermission ?? "default",
+      notificationEnabled: Boolean(user.notificationEnabled),
+      notificationRewardClaimed: Boolean(user.notificationRewardClaimed),
       wishlist:
         user.wishlist?.map((item: { _id?: { toString(): string }; toString?: () => string }) =>
           item._id?.toString?.() ?? item.toString?.() ?? ""
@@ -94,7 +102,7 @@ export async function requireAdmin() {
 
 export async function createAuthResponse(user: {
   _id: string;
-  role: "customer" | "admin";
+  role: "user" | "customer" | "admin";
   email: string;
   name?: string;
   wishlist?: string[];

@@ -1,4 +1,3 @@
-import { Coupon } from "@/lib/models/Coupon";
 import { User } from "@/lib/models/User";
 import { logApiError } from "@/lib/server/api";
 import { requireUser } from "@/lib/server/auth";
@@ -16,31 +15,13 @@ export async function POST() {
       $set: {
         notificationPermission: "granted",
         notificationPromptedAt: new Date(),
+        notificationEnabled: true,
         lastSeenAt: new Date()
       }
     });
 
-    const coupon = await Coupon.findOneAndUpdate(
-      { code: "WELCOME10" },
-      {
-        code: "WELCOME10",
-        description: "Rs.10 reward for enabling notifications",
-        type: "fixed",
-        value: 10,
-        minOrderValue: 0,
-        autoApply: false,
-        isActive: true
-      },
-      { upsert: true, new: true }
-    );
-
     return Response.json({
-      success: true,
-      coupon: {
-        code: coupon.code,
-        description: coupon.description ?? "",
-        value: coupon.value
-      }
+      success: true
     });
   } catch (error) {
     logApiError("api/notifications/subscribe", error);

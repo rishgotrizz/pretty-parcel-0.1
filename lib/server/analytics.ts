@@ -8,7 +8,7 @@ import { connectToDatabase } from "@/lib/server/db";
 export async function buildAdminAnalytics() {
   await connectToDatabase();
 
-  const [orders, events, carts, totalUsers, totalProducts, totalOrders, newUsers, activeUsers, notificationSubscribers] = await Promise.all([
+  const [orders, events, carts, totalUsers, totalProducts, totalOrders, newUsers, activeUsers, notificationSubscribers, rewardsGiven] = await Promise.all([
     Order.find().sort({ createdAt: -1 }).lean(),
     AnalyticsEvent.find().sort({ createdAt: -1 }).limit(500).lean(),
     Cart.find().lean(),
@@ -27,7 +27,8 @@ export async function buildAdminAnalytics() {
         $gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7)
       }
     }),
-    User.countDocuments({ notificationPermission: "granted" })
+    User.countDocuments({ notificationPermission: "granted" }),
+    User.countDocuments({ notificationRewardClaimed: true })
   ]);
 
   const completedStatuses = ["paid", "processing", "shipped", "out_for_delivery", "delivered"];
@@ -91,6 +92,7 @@ export async function buildAdminAnalytics() {
       activeUsers,
       repeatCustomers: repeatCustomerIds.size,
       notificationSubscribers,
+      rewardsGiven,
       totalOrders,
       totalProducts,
       paidOrders: paidOrders.length,

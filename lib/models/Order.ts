@@ -7,7 +7,7 @@ const orderItemSchema = new Schema(
     slug: { type: String, required: true },
     image: { type: String, required: true },
     quantity: { type: Number, required: true, min: 1 },
-    unitPrice: { type: Number, required: true, min: 0 }
+    unitPrice: { type: Number, required: true, min: 0, alias: "price" }
   },
   { _id: false }
 );
@@ -23,14 +23,14 @@ const trackingEventSchema = new Schema(
 
 const addressSchema = new Schema(
   {
-    fullName: String,
+    fullName: { type: String, alias: "name" },
     email: String,
     phone: String,
-    line1: String,
+    line1: { type: String, alias: "addressLine" },
     line2: String,
     city: String,
     state: String,
-    postalCode: String,
+    postalCode: { type: String, alias: "pincode" },
     country: { type: String, default: "India" }
   },
   { _id: false }
@@ -47,14 +47,14 @@ const customizationDetailsSchema = new Schema(
 
 const orderSchema = new Schema(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true, alias: "userId" },
     checkoutSessionId: { type: String, index: true },
     items: [orderItemSchema],
     subtotal: { type: Number, required: true, min: 0 },
     discount: { type: Number, required: true, min: 0, default: 0 },
     shippingFee: { type: Number, required: true, min: 0, default: 0 },
-    total: { type: Number, required: true, min: 0 },
-    couponCode: { type: String },
+    total: { type: Number, required: true, min: 0, alias: "totalAmount" },
+    couponCode: { type: String, alias: "couponUsed" },
     status: {
       type: String,
       enum: ["pending", "paid", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"],
@@ -62,7 +62,7 @@ const orderSchema = new Schema(
     },
     payment: {
       provider: { type: String, default: "razorpay" },
-      status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
+      status: { type: String, enum: ["pending", "paid", "failed"], default: "pending", alias: "paymentStatus" },
       razorpayOrderId: String,
       razorpayPaymentId: String,
       razorpaySignature: String,
@@ -72,7 +72,7 @@ const orderSchema = new Schema(
       failureReason: String,
       verifiedAt: Date
     },
-    shippingAddress: addressSchema,
+    shippingAddress: { type: addressSchema, alias: "address" },
     customizationDetails: customizationDetailsSchema,
     tracking: {
       trackingId: String,
@@ -85,6 +85,7 @@ const orderSchema = new Schema(
   }
 );
 
+orderSchema.index({ user: 1 });
 orderSchema.index(
   { user: 1, checkoutSessionId: 1 },
   {

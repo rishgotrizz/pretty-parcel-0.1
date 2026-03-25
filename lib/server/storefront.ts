@@ -4,15 +4,16 @@ import { Cart } from "@/lib/models/Cart";
 import { Coupon } from "@/lib/models/Coupon";
 import { Order } from "@/lib/models/Order";
 import { Product } from "@/lib/models/Product";
-import { AppSetting } from "@/lib/models/AppSetting";
 import { connectToDatabase } from "@/lib/server/db";
 import {
   pickBestCoupon,
   buildPricingSummary,
   getProductEffectivePrice,
+  isCouponAssignedToUser,
   isCouponCurrentlyActive
 } from "@/lib/server/pricing";
 import { getRecommendationsForUser } from "@/lib/server/recommendations";
+import { getSettings } from "@/lib/server/settings";
 import { sampleProducts, sampleCategories } from "@/lib/server/sample-data";
 import type { ProductType } from "@/types";
 
@@ -101,13 +102,16 @@ export async function getCatalogProducts(): Promise<ProductType[]> {
 }
 
 export async function getSpecialCategoryTitle() {
-  try {
-    await connectToDatabase();
-    const setting = await AppSetting.findOne({ key: "special-category-title" }).lean<any>();
-    return typeof setting?.value === "string" ? setting.value : "Special Picks";
-  } catch {
-    return "Special Picks";
-  }
+  const settings = await getSettings();
+  return settings.specialCategoryName;
+}
+
+export async function getBrandAssets() {
+  const settings = await getSettings();
+  return {
+    logoUrl: settings.logoUrl,
+    heroImageUrl: settings.heroImageUrl
+  };
 }
 
 export async function getHomePageData(userId?: string | null): Promise<{
@@ -188,7 +192,9 @@ export async function getUserCart(userId: string) {
     isActive: true,
     ...(cart.couponCode ? { $or: [{ autoApply: true }, { code: cart.couponCode.toUpperCase() }] } : { autoApply: true })
   }).lean<any[]>();
-  const validCoupons = (coupons as any[]).filter((coupon) => isCouponCurrentlyActive(coupon));
+  const validCoupons = (coupons as any[]).filter(
+    (coupon) => isCouponCurrentlyActive(coupon) && isCouponAssignedToUser(coupon, userId)
+  );
   const { coupon, discount } = pickBestCoupon(subtotal, categories, validCoupons as any[]);
 
   return {

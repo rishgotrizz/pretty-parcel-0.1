@@ -1,7 +1,7 @@
 import { Coupon } from "@/lib/models/Coupon";
 import { requireUser } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
-import { computeCouponDiscount, isCouponCurrentlyActive } from "@/lib/server/pricing";
+import { computeCouponDiscount, isCouponAssignedToUser, isCouponCurrentlyActive } from "@/lib/server/pricing";
 import { getUserCart } from "@/lib/server/storefront";
 
 export async function GET(request: Request) {
@@ -24,6 +24,9 @@ export async function GET(request: Request) {
   }
   if (!isCouponCurrentlyActive(coupon as any)) {
     return Response.json({ valid: false, error: "Coupon is not active right now." }, { status: 400 });
+  }
+  if (!isCouponAssignedToUser(coupon as any, user._id)) {
+    return Response.json({ valid: false, error: "This coupon is not available for your account." }, { status: 403 });
   }
 
   const categories = cart.items.map((item) => (item.product as { category?: string })?.category ?? "");

@@ -1,6 +1,7 @@
 import type { CouponType, ProductType } from "@/types";
 
 type CouponLike = {
+  _id?: string;
   code: string;
   description?: string | null;
   type: CouponType;
@@ -12,7 +13,27 @@ type CouponLike = {
   isActive?: boolean;
   startsAt?: string | Date | null;
   expiresAt?: string | Date | null;
+  issuedToUsers?: Array<string | { toString(): string }> | null;
 };
+
+export function isCouponAssignedToUser(coupon: CouponLike | null, userId?: string | null) {
+  if (!coupon) {
+    return false;
+  }
+
+  if (!coupon.issuedToUsers?.length) {
+    return true;
+  }
+
+  if (!userId) {
+    return false;
+  }
+
+  return coupon.issuedToUsers.some((item) => {
+    const assignedUserId = typeof item === "string" ? item : item.toString();
+    return assignedUserId === userId;
+  });
+}
 
 export function isCouponCurrentlyActive(coupon: CouponLike | null, now = new Date()) {
   if (!coupon) {
