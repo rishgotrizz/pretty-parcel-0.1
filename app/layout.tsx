@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AppProviders>
           <div className="relative min-h-screen">
             <SiteHeader />
-            <main className="relative overflow-x-clip pb-16 pt-3 sm:pt-4">{children}</main>
+            <main className="relative z-10 overflow-x-clip pb-24 pt-3 md:pb-10 sm:pt-4">{children}</main>
           </div>
           <SiteFooter />
           <ChatbotWidget />

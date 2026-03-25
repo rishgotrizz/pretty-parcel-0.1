@@ -135,7 +135,7 @@ export function ProductActions({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="relative z-10 space-y-5">
       <div className="inline-flex items-center rounded-full border border-white/70 bg-white/90 p-2 shadow-card">
         <button
           type="button"
@@ -156,12 +156,22 @@ export function ProductActions({
         </button>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <button type="button" onClick={handleAddToCart} disabled={pending} className="button-primary w-full gap-2 sm:w-auto">
+      <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={pending}
+          className="button-primary relative z-10 w-full gap-2 sm:w-auto"
+        >
           <ShoppingBag className="h-4 w-4" />
           {pending ? "Adding..." : "Add to cart"}
         </button>
-        <button type="button" onClick={handleWishlist} disabled={wishlistPending} className="button-secondary w-full gap-2 sm:w-auto">
+        <button
+          type="button"
+          onClick={handleWishlist}
+          disabled={wishlistPending}
+          className="button-secondary relative z-10 w-full gap-2 sm:w-auto"
+        >
           <Heart className="h-4 w-4" />
           {wishlistPending ? "Saving..." : "Save to wishlist"}
         </button>

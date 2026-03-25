@@ -36,11 +36,13 @@ export function ReviewsSection({ reviews, loading = false }: { reviews: ReviewCa
   }, [reviews.length]);
 
   return (
-    <section className="mt-16 pb-10 sm:mt-24 sm:pb-16">
+    <section className="relative z-20 mt-16 pb-10 md:mt-20 sm:pb-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 text-center sm:mb-10 md:text-left">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-pink-700/70">Customer Love 💖</p>
-          <h2 className="font-serif text-4xl text-slate-900 sm:text-5xl">Kind words from thoughtful gift senders.</h2>
+          <h2 className="text-2xl font-serif leading-tight break-words text-slate-900 sm:text-3xl md:text-4xl">
+            Kind words from thoughtful gift senders.
+          </h2>
           <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-500 sm:text-base md:mx-0">
             Real moments from customers who trusted The Pretty Parcel for birthdays, surprises, and handmade keepsakes.
           </p>
