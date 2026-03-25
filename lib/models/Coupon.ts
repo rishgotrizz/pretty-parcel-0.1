@@ -28,8 +28,6 @@ const couponSchema = new Schema(
   }
 );
 
-couponSchema.index({ code: 1 }, { unique: true });
-
 couponSchema.path("value").validate(function validateCouponValue(value: number) {
   if (this.type === "percentage") {
     return value <= 100;

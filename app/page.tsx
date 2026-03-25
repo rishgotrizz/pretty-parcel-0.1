@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import { HeroSection } from "@/components/home/hero-section";
 import { ProductActions } from "@/components/products/product-actions";
 import { ProductCard } from "@/components/products/product-card";
+import { ReviewsSection } from "@/components/home/reviews-section";
 import { EmptyState } from "@/components/shared/empty-state";
-import type { ProductType } from "@/types";
+import type { ProductType, StoreReview } from "@/types";
 
 export default function HomePage() {
   const [products, setProducts] = useState<ProductType[]>([]);
+  const [reviews, setReviews] = useState<StoreReview[]>([]);
   const [specialCategoryTitle, setSpecialCategoryTitle] = useState("Special Picks");
   const [loading, setLoading] = useState(true);
 
@@ -18,21 +20,30 @@ export default function HomePage() {
 
     async function loadProducts() {
       try {
-        const response = await fetch("/api/products", {
-          cache: "no-store",
-          headers: { Accept: "application/json" }
-        });
-        const raw = await response.text();
-        const data = raw ? JSON.parse(raw) : {};
+        const [productsResponse, reviewsResponse] = await Promise.all([
+          fetch("/api/products", {
+            cache: "no-store",
+            headers: { Accept: "application/json" }
+          }),
+          fetch("/api/reviews", {
+            cache: "no-store",
+            headers: { Accept: "application/json" }
+          })
+        ]);
+        const [productsRaw, reviewsRaw] = await Promise.all([productsResponse.text(), reviewsResponse.text()]);
+        const data = productsRaw ? JSON.parse(productsRaw) : {};
+        const reviewsData = reviewsRaw ? JSON.parse(reviewsRaw) : {};
 
         if (!cancelled) {
           setProducts(Array.isArray(data.products) ? data.products : []);
+          setReviews(Array.isArray(reviewsData.reviews) ? reviewsData.reviews : []);
           setSpecialCategoryTitle(typeof data.specialCategoryTitle === "string" ? data.specialCategoryTitle : "Special Picks");
         }
       } catch (error) {
         console.error("[HomePage] failed to load products", error);
         if (!cancelled) {
           setProducts([]);
+          setReviews([]);
         }
       } finally {
         if (!cancelled) {
@@ -122,6 +133,8 @@ export default function HomePage() {
           </div>
         </section>
       ) : null}
+
+      {!loading ? <ReviewsSection reviews={reviews} /> : null}
     </div>
   );
 }

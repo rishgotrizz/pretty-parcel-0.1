@@ -6,42 +6,6 @@ import { useState } from "react";
 
 export function ChatbotWidget() {
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [reply, setReply] = useState("Need help choosing a handmade gift? Ask me anything.");
-  const [pending, setPending] = useState(false);
-
-  const handleSend = async () => {
-    if (!message.trim() || pending) {
-      return;
-    }
-
-    try {
-      setPending(true);
-      console.debug("[ChatbotWidget] sending message");
-
-      const response = await fetch("/api/chatbot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ message })
-      });
-      const raw = await response.text();
-      const data = raw ? JSON.parse(raw) : {};
-
-      if (!response.ok) {
-        setReply(data.error ?? "I can help with product ideas, shipping, coupons, and order tracking.");
-        return;
-      }
-
-      setReply(data.reply ?? "I can help with product ideas, shipping, coupons, and order tracking.");
-      setMessage("");
-    } catch (error) {
-      console.error("[ChatbotWidget] send failed", error);
-      setReply("I couldn't respond right now. Please try again in a moment.");
-    } finally {
-      setPending(false);
-    }
-  };
 
   return (
     <div className="fixed bottom-5 right-5 z-50">
@@ -57,30 +21,19 @@ export function ChatbotWidget() {
             </button>
           </div>
           <div className="mt-4 rounded-[1.5rem] bg-white/80 p-4 text-sm leading-7 text-rosewood/90">
-            <p>{reply}</p>
-            <div className="mt-4 rounded-[1.25rem] bg-rosewater/90 p-4">
-              <p className="font-medium text-cocoa">For fully customized gifts, contact us on Instagram.</p>
-              <Link
-                href="https://www.instagram.com/theprettyparcel._/"
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-pink-700"
-              >
-                <Instagram className="h-4 w-4" />
-                @theprettyparcel._
-              </Link>
-            </div>
-          </div>
-          <div className="mt-4 flex gap-3">
-            <input
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder="Ask about bouquets, offers, or shipping..."
-              className="flex-1 rounded-full border border-white/70 bg-white/90 px-4 py-3 text-sm outline-none"
-            />
-            <button type="button" onClick={handleSend} className="button-primary !px-4" disabled={pending}>
-              {pending ? "..." : "Send"}
-            </button>
+            <p className="font-medium text-cocoa">For customized gifts, contact us on Instagram.</p>
+            <p className="mt-3 text-sm text-rosewood/80">
+              Share your occasion, preferred colors, and personalization ideas there and we&apos;ll guide you.
+            </p>
+            <Link
+              href="https://www.instagram.com/theprettyparcel._/"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-pink-700"
+            >
+              <Instagram className="h-4 w-4" />
+              @theprettyparcel._
+            </Link>
           </div>
         </div>
       ) : null}

@@ -4,8 +4,10 @@ import { AlertTriangle, BarChart3, MousePointerClick, Package, Percent, RefreshC
 import { useEffect, useState, type ComponentType, type FormEvent } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import { BrandingCustomization } from "@/components/admin/branding-customization";
 import { OrderTable } from "@/components/admin/order-table";
 import { ProductForm, type ProductFormFieldErrors, type ProductFormValues } from "@/components/admin/product-form";
+import { ReviewsManager } from "@/components/admin/reviews-manager";
 import { useToast } from "@/components/providers/toast-provider";
 import { formatCurrency } from "@/lib/utils";
 
@@ -875,6 +877,11 @@ export function AdminDashboard() {
             {notificationSending ? "Sending..." : "Send notification"}
           </button>
         </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <BrandingCustomization />
+        <ReviewsManager />
       </div>
 
       <section className="rounded-[2rem] border border-rose-200 bg-gradient-to-br from-rose-50/95 via-white to-rose-100/90 p-6 shadow-[var(--shadow-card)]">

@@ -61,7 +61,6 @@ const productSchema = new Schema(
 
 productSchema.index({ category: 1, popularity: -1 });
 productSchema.index({ isActive: 1, isFeatured: -1, popularity: -1 });
-productSchema.index({ slug: 1 }, { unique: true });
 
 export type ProductDocument = InferSchemaType<typeof productSchema>;
 

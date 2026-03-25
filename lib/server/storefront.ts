@@ -110,7 +110,9 @@ export async function getBrandAssets() {
   const settings = await getSettings();
   return {
     logoUrl: settings.logoUrl,
-    heroImageUrl: settings.heroImageUrl
+    heroImageUrl: settings.heroImageUrl,
+    faviconUrl: settings.faviconUrl,
+    whatsNewText: settings.whatsNewText
   };
 }
 

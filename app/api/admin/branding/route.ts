@@ -6,7 +6,9 @@ import { getSettings, updateSettings } from "@/lib/server/settings";
 
 const brandingSchema = z.object({
   logoUrl: z.string().trim().optional().or(z.literal("")),
-  heroImageUrl: z.string().trim().optional().or(z.literal(""))
+  heroImageUrl: z.string().trim().optional().or(z.literal("")),
+  faviconUrl: z.string().trim().optional().or(z.literal("")),
+  whatsNewText: z.string().trim().max(180).optional().or(z.literal(""))
 });
 
 export async function GET() {
@@ -21,6 +23,8 @@ export async function GET() {
     branding: settings ?? {
       logoUrl: "",
       heroImageUrl: "",
+      faviconUrl: "",
+      whatsNewText: "",
       specialCategoryName: "Special Picks"
     }
   });
@@ -40,7 +44,9 @@ export async function PATCH(request: Request) {
 
     const branding = await updateSettings({
       logoUrl: parsed.data.logoUrl ?? "",
-      heroImageUrl: parsed.data.heroImageUrl ?? ""
+      heroImageUrl: parsed.data.heroImageUrl ?? "",
+      faviconUrl: parsed.data.faviconUrl ?? "",
+      whatsNewText: parsed.data.whatsNewText ?? ""
     });
 
     return Response.json({

@@ -85,7 +85,6 @@ const orderSchema = new Schema(
   }
 );
 
-orderSchema.index({ user: 1 });
 orderSchema.index(
   { user: 1, checkoutSessionId: 1 },
   {

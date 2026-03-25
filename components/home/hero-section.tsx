@@ -1,11 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { Gift, Instagram, Sparkles, Star } from "lucide-react";
 
+import { useBranding } from "@/components/providers/brand-provider";
 import { Button } from "@/components/shared/button";
 import { Card } from "@/components/shared/card";
 import { FlashSaleTimer } from "@/components/shared/flash-sale-timer";
 
 export function HeroSection({ flashSaleEndsAt }: { flashSaleEndsAt?: string }) {
+  const { branding } = useBranding();
+
   return (
     <section className="pt-4 sm:pt-8">
       <div className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
@@ -16,7 +21,7 @@ export function HeroSection({ flashSaleEndsAt }: { flashSaleEndsAt?: string }) {
           </div>
           <div className="space-y-4">
             <h1 className="max-w-3xl font-serif text-5xl leading-[0.92] text-slate-900 sm:text-6xl lg:text-7xl">
-              Private gifting, wrapped in soft pink elegance.
+              Premium gifting, wrapped in soft pink elegance.
             </h1>
             <p className="max-w-xl text-base leading-8 text-slate-500 sm:text-lg">
               Handmade bouquets, portraits, keychains, scrapbooks, and keepsakes designed for thoughtful moments and
@@ -50,17 +55,23 @@ export function HeroSection({ flashSaleEndsAt }: { flashSaleEndsAt?: string }) {
           <div className="absolute inset-6 rounded-[2.5rem] bg-gradient-to-br from-pink-300/30 via-white/70 to-pink-100/50 blur-3xl" />
           <Card className="relative overflow-hidden rounded-[2.5rem] p-4 sm:p-5">
             <img
-              src="/hero-pretty-parcel.svg"
+              src={branding.heroImageUrl || "/hero-pretty-parcel.svg"}
               alt="The Pretty Parcel hero"
               className="h-[360px] w-full rounded-[2rem] object-cover sm:h-[440px] lg:h-[520px]"
             />
             <div className="mt-4 rounded-[1.75rem] border border-white/80 bg-white/90 p-5 shadow-sm sm:absolute sm:bottom-8 sm:left-8 sm:mt-0 sm:max-w-xs">
               <p className="text-xs font-semibold uppercase tracking-[0.26em] text-pink-700/70">Store mood</p>
-              <p className="mt-2 font-serif text-2xl text-slate-900">Soft, private gifting with a polished premium feel.</p>
+              <p className="mt-2 font-serif text-2xl text-slate-900">Soft, premium gifting with a polished premium feel.</p>
             </div>
           </Card>
         </div>
       </div>
+      {branding.whatsNewText ? (
+        <div className="mt-6 rounded-[1.5rem] border border-pink-100/80 bg-white/80 px-5 py-4 text-sm leading-7 text-rosewood/80 shadow-sm">
+          <span className="mr-2 font-semibold uppercase tracking-[0.22em] text-pink-700/70">What&apos;s New</span>
+          {branding.whatsNewText}
+        </div>
+      ) : null}
     </section>
   );
 }

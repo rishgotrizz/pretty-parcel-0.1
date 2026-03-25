@@ -80,7 +80,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     <div className="mx-auto grid max-w-5xl items-center gap-8 lg:grid-cols-[0.95fr_1.05fr]">
       <div className="order-2 space-y-4 px-2 text-center lg:order-1 lg:px-0 lg:text-left">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-pink-600/80">
-          {isLogin ? "Welcome back" : "Private gifting account"}
+          {isLogin ? "Welcome back" : "Premium gifting account"}
         </p>
         <h1 className="font-serif text-4xl leading-[1.02] text-slate-900 sm:text-5xl">
           {isLogin ? "Step back into your curated gift cart." : "Create an elegant account for every special order."}
@@ -112,7 +112,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           {isLogin ? "Your gifting profile" : "Join The Pretty Parcel"}
         </h2>
         <p className="mt-3 text-sm leading-7 text-slate-500">
-          A clean, private, premium shopping space for thoughtful handmade gifting.
+          A clean, premium shopping space for thoughtful handmade gifting.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">

@@ -5,6 +5,7 @@ import { Heart, Menu, ShoppingBag, Sparkles, User } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/components/providers/auth-provider";
+import { useBranding } from "@/components/providers/brand-provider";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -17,6 +18,7 @@ const navigation = [
 
 export function SiteHeader() {
   const { user, setUser, refresh } = useAuth();
+  const { branding } = useBranding();
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
@@ -66,9 +68,15 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-white/60 bg-white/65 backdrop-blur-xl">
       <div className="section-shell flex items-center justify-between gap-4 py-4">
         <Link href="/" className="flex items-center gap-3">
-          <div className="story-ring flex h-11 w-11 items-center justify-center rounded-full bg-white text-berry">
-            <Sparkles className="h-5 w-5" />
-          </div>
+          {branding.logoUrl ? (
+            <div className="story-ring flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white text-berry">
+              <img src={branding.logoUrl} alt="The Pretty Parcel logo" className="h-full w-full object-cover" />
+            </div>
+          ) : (
+            <div className="story-ring flex h-11 w-11 items-center justify-center rounded-full bg-white text-berry">
+              <Sparkles className="h-5 w-5" />
+            </div>
+          )}
           <div>
             <p className="font-serif text-2xl leading-none text-cocoa">The Pretty Parcel</p>
             <p className="text-xs uppercase tracking-[0.28em] text-rosewood/70">Handmade gifting studio</p>

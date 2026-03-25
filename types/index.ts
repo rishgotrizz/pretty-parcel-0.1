@@ -6,7 +6,7 @@ export type ProductCategory =
   | "Scrapbooks"
   | "Custom Frames";
 
-export type UserRole = "customer" | "admin";
+export type UserRole = "user" | "customer" | "admin";
 
 export type OrderStatus =
   | "pending"
@@ -69,4 +69,12 @@ export interface CouponSummary {
   value: number;
   minOrderValue?: number;
   autoApply: boolean;
+}
+
+export interface StoreReview {
+  _id: string;
+  name: string;
+  text: string;
+  imageUrl?: string;
+  createdAt: string;
 }
