@@ -7,7 +7,7 @@ import { isDuplicateKeyError, logApiError, parseJsonBody } from "@/lib/server/ap
 import { requireUser } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
 import {
-  buildPricingSummary,
+  buildPricingSummaryWithSettings,
   getProductEffectivePrice,
   isCouponAssignedToUser,
   isCouponCurrentlyActive,
@@ -157,7 +157,7 @@ export async function POST(request: Request) {
       eligibleCoupons as any[]
     );
 
-    const pricing = buildPricingSummary({ subtotal, discount });
+    const pricing = await buildPricingSummaryWithSettings({ subtotal, discount });
     const order = await Order.create({
       user: user._id,
       checkoutSessionId,

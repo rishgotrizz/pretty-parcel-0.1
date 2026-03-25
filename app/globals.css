@@ -116,7 +116,7 @@ img {
 }
 
 .ui-button {
-  @apply inline-flex min-h-[46px] items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[-0.01em];
+  @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[-0.01em];
 }
 
 .ui-button:focus-visible {
@@ -161,6 +161,19 @@ img {
 
 .section-shell {
   @apply ui-container;
+}
+
+.marquee-track {
+  animation: marquee 18s linear infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .font-serif,

@@ -35,8 +35,8 @@ export function ReviewsManager() {
   useEffect(() => {
     async function loadReviews() {
       try {
-        const response = await fetch("/api/reviews", {
-          cache: "no-store",
+        const response = await fetch("/api/admin/reviews", {
+          credentials: "include",
           headers: { Accept: "application/json" }
         });
         const raw = await response.text();

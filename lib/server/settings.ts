@@ -8,6 +8,8 @@ export type StoreSettings = {
   faviconUrl: string;
   whatsNewText: string;
   storeMoodText: string;
+  shippingPrice: number;
+  freeShippingThreshold: number;
   specialCategoryName: string;
 };
 
@@ -17,6 +19,8 @@ const defaultSettings: StoreSettings = {
   faviconUrl: "",
   whatsNewText: "",
   storeMoodText: "Soft, premium gifting with a polished premium feel.",
+  shippingPrice: 149,
+  freeShippingThreshold: 1999,
   specialCategoryName: "Special Picks"
 };
 
@@ -32,6 +36,8 @@ async function hydrateFromLegacySettings() {
     faviconUrl: brandingSetting?.value?.faviconUrl ?? "",
     whatsNewText: brandingSetting?.value?.whatsNewText ?? "",
     storeMoodText: brandingSetting?.value?.storeMoodText ?? defaultSettings.storeMoodText,
+    shippingPrice: Number(brandingSetting?.value?.shippingPrice ?? defaultSettings.shippingPrice),
+    freeShippingThreshold: Number(brandingSetting?.value?.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
     specialCategoryName:
       typeof specialCategorySetting?.value === "string" && specialCategorySetting.value.trim()
         ? specialCategorySetting.value
@@ -56,6 +62,8 @@ export async function getSettings(): Promise<StoreSettings> {
       faviconUrl: settings.faviconUrl ?? "",
       whatsNewText: settings.whatsNewText ?? "",
       storeMoodText: settings.storeMoodText ?? defaultSettings.storeMoodText,
+      shippingPrice: Number(settings.shippingPrice ?? defaultSettings.shippingPrice),
+      freeShippingThreshold: Number(settings.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
       specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName
     };
   }
@@ -66,6 +74,8 @@ export async function getSettings(): Promise<StoreSettings> {
     faviconUrl: settings.faviconUrl ?? "",
     whatsNewText: settings.whatsNewText ?? "",
     storeMoodText: settings.storeMoodText ?? defaultSettings.storeMoodText,
+    shippingPrice: Number(settings.shippingPrice ?? defaultSettings.shippingPrice),
+    freeShippingThreshold: Number(settings.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
     specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName
   };
 }
@@ -91,6 +101,8 @@ export async function updateSettings(input: Partial<StoreSettings>): Promise<Sto
     faviconUrl: settings.faviconUrl ?? "",
     whatsNewText: settings.whatsNewText ?? "",
     storeMoodText: settings.storeMoodText ?? defaultSettings.storeMoodText,
+    shippingPrice: Number(settings.shippingPrice ?? defaultSettings.shippingPrice),
+    freeShippingThreshold: Number(settings.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
     specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName
   };
 }

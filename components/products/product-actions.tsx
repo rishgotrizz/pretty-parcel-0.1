@@ -156,12 +156,12 @@ export function ProductActions({
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={handleAddToCart} disabled={pending} className="button-primary gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <button type="button" onClick={handleAddToCart} disabled={pending} className="button-primary w-full gap-2 sm:w-auto">
           <ShoppingBag className="h-4 w-4" />
           {pending ? "Adding..." : "Add to cart"}
         </button>
-        <button type="button" onClick={handleWishlist} disabled={wishlistPending} className="button-secondary gap-2">
+        <button type="button" onClick={handleWishlist} disabled={wishlistPending} className="button-secondary w-full gap-2 sm:w-auto">
           <Heart className="h-4 w-4" />
           {wishlistPending ? "Saving..." : "Save to wishlist"}
         </button>

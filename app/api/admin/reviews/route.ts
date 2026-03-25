@@ -45,3 +45,24 @@ export async function POST(request: Request) {
     return Response.json({ success: false, error: "Could not save review right now." }, { status: 500 });
   }
 }
+
+export async function GET() {
+  const admin = await requireAdmin();
+  if (admin instanceof Response) {
+    return Response.json({ success: false, error: "Forbidden" }, { status: 403 });
+  }
+
+  await connectToDatabase();
+  const reviews = await Review.find().sort({ createdAt: -1 }).lean<any[]>();
+
+  return Response.json({
+    success: true,
+    reviews: reviews.map((review) => ({
+      _id: review._id.toString(),
+      name: review.name,
+      text: review.text,
+      imageUrl: review.imageUrl ?? "",
+      createdAt: new Date(review.createdAt).toISOString()
+    }))
+  });
+}

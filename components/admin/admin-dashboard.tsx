@@ -8,6 +8,7 @@ import { BrandingCustomization } from "@/components/admin/branding-customization
 import { OrderTable } from "@/components/admin/order-table";
 import { ProductForm, type ProductFormFieldErrors, type ProductFormValues } from "@/components/admin/product-form";
 import { ReviewsManager } from "@/components/admin/reviews-manager";
+import { ShippingSettings } from "@/components/admin/shipping-settings";
 import { broadcastProductsUpdated } from "@/components/products/use-products-feed";
 import { useToast } from "@/components/providers/toast-provider";
 import { formatCurrency } from "@/lib/utils";
@@ -887,6 +888,8 @@ export function AdminDashboard() {
         <BrandingCustomization />
         <ReviewsManager />
       </div>
+
+      <ShippingSettings />
 
       <section className="rounded-[2rem] border border-rose-200 bg-gradient-to-br from-rose-50/95 via-white to-rose-100/90 p-6 shadow-[var(--shadow-card)]">
         <div className="flex flex-wrap items-start justify-between gap-4">

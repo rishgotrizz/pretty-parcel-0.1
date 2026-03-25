@@ -26,6 +26,7 @@ type CartState = {
 
 export function CartView() {
   const [cart, setCart] = useState<CartState | null>(null);
+  const [shippingSettings, setShippingSettings] = useState({ shippingPrice: 149, freeShippingThreshold: 1999 });
   const [loading, setLoading] = useState(true);
   const [activeProductId, setActiveProductId] = useState("");
   const { pushToast } = useToast();
@@ -66,6 +67,24 @@ export function CartView() {
 
   useEffect(() => {
     void loadCart();
+
+    fetch("/api/settings", {
+      cache: "no-store",
+      headers: { Accept: "application/json" }
+    })
+      .then(async (response) => {
+        const raw = await response.text();
+        return raw ? JSON.parse(raw) : {};
+      })
+      .then((data) =>
+        setShippingSettings({
+          shippingPrice: Number(data.settings?.shippingPrice ?? 149),
+          freeShippingThreshold: Number(data.settings?.freeShippingThreshold ?? 1999)
+        })
+      )
+      .catch((error) => {
+        console.error("[CartView] settings load failed", error);
+      });
   }, []);
 
   const updateQuantity = async (productId: string, quantity: number) => {
@@ -154,8 +173,28 @@ export function CartView() {
     );
   }
 
+  const eligibleTotal = Math.max(cart.summary.subtotal - cart.summary.discount, 0);
+  const remainingForFreeShipping = Math.max(shippingSettings.freeShippingThreshold - eligibleTotal, 0);
+  const shippingBannerText =
+    eligibleTotal >= shippingSettings.freeShippingThreshold
+      ? "You unlocked FREE shipping!"
+      : `Add ${formatCurrency(remainingForFreeShipping)} more to get FREE shipping`;
+
   return (
     <div className="section-shell grid gap-8 py-8 pb-28 sm:py-12 lg:grid-cols-[1.3fr_0.7fr] lg:pb-12">
+      <div className="lg:col-span-2">
+        <div className="group sticky top-[4.8rem] z-20 overflow-hidden rounded-[1.5rem] border border-pink-100/80 bg-gradient-to-r from-rosewater via-pink-50 to-white px-4 py-3 shadow-[var(--shadow-card)]">
+          <div className="marquee-track whitespace-nowrap text-sm font-semibold text-pink-700 group-hover:[animation-play-state:paused]">
+            <span className="mx-6 inline-block">🎁 Free shipping on orders above {formatCurrency(shippingSettings.freeShippingThreshold)}</span>
+            <span className="mx-6 inline-block">{shippingBannerText}</span>
+            <span className="mx-6 inline-block">Shipping today: {formatCurrency(shippingSettings.shippingPrice)}</span>
+            <span className="mx-6 inline-block">🎁 Free shipping on orders above {formatCurrency(shippingSettings.freeShippingThreshold)}</span>
+            <span className="mx-6 inline-block">{shippingBannerText}</span>
+            <span className="mx-6 inline-block">Shipping today: {formatCurrency(shippingSettings.shippingPrice)}</span>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-5">
         {cart.items.map((item) => (
           <div key={item.product._id} className="glass-panel flex flex-col gap-4 rounded-[2rem] p-5 sm:flex-row">

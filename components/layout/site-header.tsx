@@ -96,6 +96,20 @@ export function SiteHeader() {
           ) : null}
         </nav>
 
+        <div className="flex items-center gap-2 lg:hidden">
+          <Link href="/cart" className="relative rounded-full bg-white/90 p-3 text-rosewood shadow-card">
+            <ShoppingBag className="h-4 w-4" />
+            {cartCount ? (
+              <span className="absolute -right-1 -top-1 rounded-full bg-berry px-1.5 text-[10px] text-white">
+                {cartCount}
+              </span>
+            ) : null}
+          </Link>
+          <Link href={user ? "/account" : "/login"} className="rounded-full bg-white/90 p-3 text-rosewood shadow-card">
+            <User className="h-4 w-4" />
+          </Link>
+        </div>
+
         <div className="hidden items-center gap-3 lg:flex">
           <Link href="/wishlist" className="relative rounded-full bg-white/90 p-3 text-rosewood shadow-card">
             <Heart className="h-4 w-4" />

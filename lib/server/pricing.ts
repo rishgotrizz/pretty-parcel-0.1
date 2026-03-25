@@ -1,4 +1,5 @@
 import type { CouponType, ProductType } from "@/types";
+import { getSettings } from "@/lib/server/settings";
 
 type CouponLike = {
   _id?: string;
@@ -118,6 +119,11 @@ export function calculateShipping(subtotal: number) {
   return subtotal >= 1999 ? 0 : 149;
 }
 
+export async function calculateShippingForSubtotal(subtotal: number) {
+  const settings = await getSettings();
+  return subtotal >= settings.freeShippingThreshold ? 0 : settings.shippingPrice;
+}
+
 export function buildPricingSummary({
   subtotal,
   discount
@@ -126,6 +132,23 @@ export function buildPricingSummary({
   discount: number;
 }) {
   const shippingFee = calculateShipping(subtotal - discount);
+  const total = Math.max(subtotal - discount + shippingFee, 0);
+  return {
+    subtotal,
+    discount,
+    shippingFee,
+    total
+  };
+}
+
+export async function buildPricingSummaryWithSettings({
+  subtotal,
+  discount
+}: {
+  subtotal: number;
+  discount: number;
+}) {
+  const shippingFee = await calculateShippingForSubtotal(subtotal - discount);
   const total = Math.max(subtotal - discount + shippingFee, 0);
   return {
     subtotal,

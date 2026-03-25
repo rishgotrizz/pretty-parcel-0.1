@@ -8,6 +8,7 @@ import { connectToDatabase } from "@/lib/server/db";
 import {
   pickBestCoupon,
   buildPricingSummary,
+  buildPricingSummaryWithSettings,
   getProductEffectivePrice,
   isCouponAssignedToUser,
   isCouponCurrentlyActive
@@ -171,7 +172,7 @@ export async function getUserCart(userId: string) {
   if (!cart) {
     return {
       items: [],
-      summary: buildPricingSummary({ subtotal: 0, discount: 0 }),
+      summary: await buildPricingSummaryWithSettings({ subtotal: 0, discount: 0 }),
       appliedCoupon: null
     };
   }
@@ -202,10 +203,11 @@ export async function getUserCart(userId: string) {
     (coupon) => isCouponCurrentlyActive(coupon) && isCouponAssignedToUser(coupon, userId)
   );
   const { coupon, discount } = pickBestCoupon(subtotal, categories, validCoupons as any[]);
+  const summary = await buildPricingSummaryWithSettings({ subtotal, discount });
 
   return {
     items,
-    summary: buildPricingSummary({ subtotal, discount }),
+    summary,
     appliedCoupon: coupon ? { code: coupon.code, discount, description: coupon.description ?? "", minOrderValue: coupon.minOrderValue ?? 0 } : null,
     availableCoupons: validCoupons.map((item) => ({
       code: item.code,

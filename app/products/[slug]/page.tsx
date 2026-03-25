@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import { Star } from "lucide-react";
-
 import { ProductActions } from "@/components/products/product-actions";
 import { FlashSaleTimer } from "@/components/shared/flash-sale-timer";
 import { getProductBySlug } from "@/lib/server/storefront";
@@ -62,24 +60,6 @@ export default async function ProductDetailPage({
               <span className="font-semibold text-cocoa">Customisation:</span> {product.customisationNotes}
             </div>
           ) : null}
-        </div>
-
-        <div className="glass-panel rounded-[2rem] p-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Reviews</p>
-          <div className="mt-5 space-y-4">
-            {product.reviews.map((review) => (
-              <div key={`${review.name}-${review.date}`} className="rounded-[1.5rem] bg-white/80 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-cocoa">{review.name}</p>
-                  <div className="inline-flex items-center gap-1 text-sm text-rosewood">
-                    <Star className="h-4 w-4 fill-gold text-gold" />
-                    {review.rating}
-                  </div>
-                </div>
-                <p className="mt-2 text-sm leading-7 text-rosewood/80">{review.comment}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
