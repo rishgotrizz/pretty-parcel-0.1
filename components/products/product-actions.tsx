@@ -135,48 +135,48 @@ export function ProductActions({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div className="inline-flex w-fit items-center rounded-full border border-white/70 bg-white/90 p-2 shadow-card">
-        <button
-          type="button"
-          onClick={() => setQuantity((value) => Math.max(1, value - 1))}
-          className="rounded-full p-2 text-rosewood"
-          aria-label="Decrease quantity"
-        >
-          <Minus className="h-4 w-4" />
-        </button>
-        <span className="min-w-10 text-center text-sm font-semibold text-cocoa">{quantity}</span>
-        <button
-          type="button"
-          onClick={() => setQuantity((value) => value + 1)}
-          className="rounded-full p-2 text-rosewood"
-          aria-label="Increase quantity"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      </div>
+    <div className="min-w-0 space-y-4">
+      <div className="flex min-w-0 flex-col gap-3">
+        <div className="inline-flex w-fit max-w-full items-center rounded-full border border-white/70 bg-white/90 p-2 shadow-card">
+          <button
+            type="button"
+            onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+            className="rounded-full p-2 text-rosewood"
+            aria-label="Decrease quantity"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <span className="min-w-10 text-center text-sm font-semibold text-cocoa">{quantity}</span>
+          <button
+            type="button"
+            onClick={() => setQuantity((value) => value + 1)}
+            className="rounded-full p-2 text-rosewood"
+            aria-label="Increase quantity"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[22rem] lg:flex-1">
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={pending}
-          className="button-primary w-full gap-2"
-        >
-          <ShoppingBag className="h-4 w-4" />
-          {pending ? "Adding..." : "Add to cart"}
-        </button>
-        <button
-          type="button"
-          onClick={handleWishlist}
-          disabled={wishlistPending}
-          className="button-secondary w-full gap-2"
-        >
-          <Heart className="h-4 w-4" />
-          {wishlistPending ? "Saving..." : "Save to wishlist"}
-        </button>
-      </div>
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={pending}
+            className="button-primary w-full gap-2"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            {pending ? "Adding..." : "Add to cart"}
+          </button>
+          <button
+            type="button"
+            onClick={handleWishlist}
+            disabled={wishlistPending}
+            className="button-secondary w-full gap-2"
+          >
+            <Heart className="h-4 w-4" />
+            {wishlistPending ? "Saving..." : "Save to wishlist"}
+          </button>
+        </div>
       </div>
 
       {message ? <p className="text-sm font-medium text-rosewood">{message}</p> : null}
