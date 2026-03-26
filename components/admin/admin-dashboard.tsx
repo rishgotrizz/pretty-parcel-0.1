@@ -6,6 +6,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 
 import { BrandingCustomization } from "@/components/admin/branding-customization";
 import { CampaignSettingsPanel } from "@/components/admin/campaign-settings-panel";
+import { CategoryManagement } from "@/components/admin/category-management";
 import { OrderTable } from "@/components/admin/order-table";
 import { ProductForm, type ProductFormFieldErrors, type ProductFormValues } from "@/components/admin/product-form";
 import { ReviewsManager } from "@/components/admin/reviews-manager";
@@ -63,6 +64,7 @@ type DashboardPayload = {
     customerLevels: Array<{ name: string; email: string; orderCount: number; level: number }>;
   };
   products: ProductAdminItem[];
+  categories: Array<{ _id: string; name: string; createdAt: string }>;
   orders: Array<{
     _id: string;
     status: string;
@@ -220,17 +222,19 @@ export function AdminDashboard() {
   async function loadDashboard() {
     try {
       setLoadingDashboard(true);
-      const [analyticsResponse, productsResponse, ordersResponse, couponsResponse, marketingResponse] = await Promise.all([
+      const [analyticsResponse, productsResponse, categoriesResponse, ordersResponse, couponsResponse, marketingResponse] = await Promise.all([
         fetch("/api/admin/analytics", { credentials: "include", headers: { Accept: "application/json" } }),
         fetch("/api/admin/products", { credentials: "include", headers: { Accept: "application/json" } }),
+        fetch("/api/categories", { credentials: "include", headers: { Accept: "application/json" } }),
         fetch("/api/admin/orders", { credentials: "include", headers: { Accept: "application/json" } }),
         fetch("/api/admin/coupons", { credentials: "include", headers: { Accept: "application/json" } }),
         fetch("/api/admin/marketing", { credentials: "include", headers: { Accept: "application/json" } })
       ]);
 
-      const [analytics, products, orders, coupons, marketing] = await Promise.all([
+      const [analytics, products, categories, orders, coupons, marketing] = await Promise.all([
         readJson(analyticsResponse),
         readJson(productsResponse),
+        readJson(categoriesResponse),
         readJson(ordersResponse),
         readJson(couponsResponse),
         readJson(marketingResponse)
@@ -238,6 +242,7 @@ export function AdminDashboard() {
 
       const analyticsPayload = analytics?.data ?? analytics ?? {};
       const productsPayload = products?.data ?? products ?? {};
+      const categoriesPayload = categories?.data ?? categories ?? {};
       const ordersPayload = orders?.data ?? orders ?? {};
       const couponsPayload = coupons?.data ?? coupons ?? {};
       const marketingPayload = marketing?.data ?? marketing ?? {};
@@ -269,6 +274,9 @@ export function AdminDashboard() {
         customerLevels: Array.isArray(analyticsPayload?.customerLevels) ? analyticsPayload.customerLevels : []
       };
       const normalizedProducts = Array.isArray(productsPayload?.products ?? products?.products) ? (productsPayload?.products ?? products?.products) : [];
+      const normalizedCategories = Array.isArray(categoriesPayload?.categories ?? categories?.categories)
+        ? (categoriesPayload?.categories ?? categories?.categories)
+        : [];
       const normalizedOrders = Array.isArray(ordersPayload?.orders ?? orders?.orders) ? (ordersPayload?.orders ?? orders?.orders) : [];
       const normalizedCoupons = Array.isArray(couponsPayload?.coupons ?? coupons?.coupons) ? (couponsPayload?.coupons ?? coupons?.coupons) : [];
       const nextSpecialCategoryTitle =
@@ -282,6 +290,7 @@ export function AdminDashboard() {
       setData({
         analytics: normalizedAnalytics,
         products: normalizedProducts,
+        categories: normalizedCategories,
         orders: normalizedOrders,
         coupons: normalizedCoupons,
         marketing: {
@@ -735,6 +744,7 @@ export function AdminDashboard() {
         <section className="glass-panel rounded-[2rem] border border-white/70 p-6">
           <ProductForm
             product={toFormValues(editingProduct)}
+            categories={data.categories.map((category) => category.name)}
             fieldErrors={productFieldErrors}
             saving={savingProduct}
             resetSignal={productResetSignal}
@@ -810,6 +820,20 @@ export function AdminDashboard() {
           </div>
         </section>
       </div>
+
+      <CategoryManagement
+        categories={data.categories}
+        onCategoriesChange={(categories) =>
+          setData((current) =>
+            current
+              ? {
+                  ...current,
+                  categories
+                }
+              : current
+          )
+        }
+      />
 
       <OrderTable orders={data.orders} activeOrderId={activeOrderId} onStatusChange={(id, status) => void updateOrderStatus(id, status)} />
 

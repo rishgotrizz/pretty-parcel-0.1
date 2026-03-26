@@ -26,6 +26,8 @@ export function SiteFooter() {
             <Link href="/signup">Sign up</Link>
             <Link href="/orders">Track orders</Link>
             <Link href="/terms">Terms & policies</Link>
+            <Link href="/privacy-policy">Privacy policy</Link>
+            <Link href="/contact">Contact us</Link>
           </div>
         </div>
       </div>

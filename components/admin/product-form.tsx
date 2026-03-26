@@ -30,6 +30,7 @@ export type ProductFormFieldErrors = Partial<Record<keyof ProductFormValues | "i
 
 type ProductFormProps = {
   product: ProductFormValues;
+  categories?: string[];
   fieldErrors: ProductFormFieldErrors;
   saving: boolean;
   resetSignal: number;
@@ -126,6 +127,7 @@ function buildDraft(product: ProductFormValues): ProductFormValues {
 
 export function ProductForm({
   product,
+  categories,
   fieldErrors,
   saving,
   resetSignal,
@@ -134,6 +136,7 @@ export function ProductForm({
 }: ProductFormProps) {
   const [draft, setDraft] = useState<ProductFormValues>(buildDraft(product));
   const [uploading, setUploading] = useState(false);
+  const availableCategories = categories?.length ? categories : productCategories;
 
   useEffect(() => {
     setDraft(buildDraft(product));
@@ -241,12 +244,15 @@ export function ProductForm({
                 )}
               >
                 <option value="">Select a category</option>
-                {productCategories.map((category) => (
+                {availableCategories.map((category) => (
                   <option key={category} value={category}>
                     {category}
                   </option>
                 ))}
               </select>
+              {!availableCategories.length ? (
+                <FieldHint>Add a category in the category management panel first.</FieldHint>
+              ) : null}
               <FieldError message={fieldErrors.category} />
             </div>
 

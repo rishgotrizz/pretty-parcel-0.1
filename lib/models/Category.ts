@@ -8,16 +8,13 @@ const categorySchema = new Schema(
       unique: true,
       trim: true,
       minlength: 2,
-      maxlength: 80,
-      index: true
+      maxlength: 80
     }
   },
   {
     timestamps: true
   }
 );
-
-categorySchema.index({ name: 1 }, { unique: true });
 
 export type CategoryDocument = InferSchemaType<typeof categorySchema>;
 
