@@ -6,9 +6,8 @@ import { Gift, Instagram, Sparkles, Star } from "lucide-react";
 import { useBranding } from "@/components/providers/brand-provider";
 import { Button } from "@/components/shared/button";
 import { Card } from "@/components/shared/card";
-import { FlashSaleTimer } from "@/components/shared/flash-sale-timer";
 
-export function HeroSection({ flashSaleEndsAt }: { flashSaleEndsAt?: string }) {
+export function HeroSection() {
   const { branding } = useBranding();
 
   return (
@@ -35,7 +34,6 @@ export function HeroSection({ flashSaleEndsAt }: { flashSaleEndsAt?: string }) {
             <Button href="/terms" variant="secondary" className="w-full sm:w-auto">
               Policies
             </Button>
-            {flashSaleEndsAt ? <FlashSaleTimer endsAt={flashSaleEndsAt} /> : null}
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {[

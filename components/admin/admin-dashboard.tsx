@@ -1,10 +1,11 @@
 "use client";
 
 import { AlertTriangle, BarChart3, MousePointerClick, Package, Percent, RefreshCcw, ShoppingBag, Sparkles, Trash2, Users } from "lucide-react";
-import { useEffect, useState, type ComponentType, type FormEvent } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { BrandingCustomization } from "@/components/admin/branding-customization";
+import { CampaignSettingsPanel } from "@/components/admin/campaign-settings-panel";
 import { OrderTable } from "@/components/admin/order-table";
 import { ProductForm, type ProductFormFieldErrors, type ProductFormValues } from "@/components/admin/product-form";
 import { ReviewsManager } from "@/components/admin/reviews-manager";
@@ -186,7 +187,6 @@ export function AdminDashboard() {
   const [message, setMessage] = useState("");
   const [loadingDashboard, setLoadingDashboard] = useState(true);
   const [savingProduct, setSavingProduct] = useState(false);
-  const [savingCoupon, setSavingCoupon] = useState(false);
   const [activeDeleteId, setActiveDeleteId] = useState("");
   const [activeOrderId, setActiveOrderId] = useState("");
   const [editingProduct, setEditingProduct] = useState<ProductAdminItem | null>(null);
@@ -370,39 +370,6 @@ export function AdminDashboard() {
       pushToast("Could not save product.", "error");
     } finally {
       setSavingProduct(false);
-    }
-  }
-
-  async function createCoupon(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const payload = Object.fromEntries(formData.entries());
-
-    try {
-      setSavingCoupon(true);
-      const response = await fetch("/api/admin/coupons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload)
-      });
-      const result = await readJson(response);
-      if (!response.ok) {
-        setMessage(result.error ?? "Could not save coupon.");
-        pushToast(result.error ?? "Could not save coupon.", "error");
-        return;
-      }
-
-      setMessage("Coupon saved successfully.");
-      pushToast("Coupon saved successfully.", "success");
-      event.currentTarget.reset();
-      void loadDashboard();
-    } catch (error) {
-      console.error("[AdminDashboard] create coupon failed", error);
-      setMessage("Could not save coupon.");
-      pushToast("Could not save coupon.", "error");
-    } finally {
-      setSavingCoupon(false);
     }
   }
 
@@ -869,26 +836,7 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="glass-panel rounded-[2rem] border border-white/70 p-6">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Create coupon</p>
-          <form onSubmit={createCoupon} className="mt-6 grid gap-3 sm:grid-cols-2">
-            <input name="code" required placeholder="Code" className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm" />
-            <input name="description" placeholder="Description" className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm" />
-            <select name="type" className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm">
-              <option value="percentage">Percentage</option>
-              <option value="fixed">Fixed</option>
-            </select>
-            <input name="value" required type="number" placeholder="Value" className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm" />
-            <input name="minOrderValue" type="number" placeholder="Minimum order value" className="rounded-[1rem] border bg-white/90 px-4 py-3 text-sm" />
-            <label className="flex items-center gap-2 rounded-[1rem] border bg-white/90 px-4 py-3 text-sm">
-              <input name="autoApply" type="checkbox" value="true" />
-              Auto apply
-            </label>
-            <button type="submit" disabled={savingCoupon} className="button-primary sm:col-span-2">
-              {savingCoupon ? "Saving coupon..." : "Save coupon"}
-            </button>
-          </form>
-        </div>
+        <CampaignSettingsPanel />
 
         <div className="glass-panel rounded-[2rem] border border-white/70 p-6">
           <div className="flex items-center gap-3">

@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 
+import { ProductCard } from "@/components/products/product-card";
 import { ProductsExplorer } from "@/components/products/products-explorer";
 import { useProductsFeed } from "@/components/products/use-products-feed";
 import { SectionHeading } from "@/components/shared/section-heading";
 
 export default function ProductsPage() {
   const { products, categories, loading } = useProductsFeed();
+  const specialProducts = products.filter((product) => product?.isSpecial);
+  const normalProducts = products.filter((product) => !product?.isSpecial);
+  const normalCategories = [...new Set(normalProducts.map((product) => product?.category).filter(Boolean))] as string[];
 
   return (
     <div className="pb-10">
@@ -28,7 +32,24 @@ export default function ProductsPage() {
           </div>
         </div>
       ) : (
-        <ProductsExplorer products={products} categories={categories} />
+        <>
+          {specialProducts.length ? (
+            <section className="section-shell pt-4">
+              <div className="mb-6 space-y-3">
+                <h2 className="font-serif text-3xl text-slate-900 sm:text-4xl">Special Picks</h2>
+                <p className="max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
+                  Limited selections highlighted for gifting moments that deserve extra sparkle.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {specialProducts.map((product) => (
+                  <ProductCard key={`shop-special-${product.slug}`} product={product} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+          <ProductsExplorer products={normalProducts} categories={normalCategories.length ? normalCategories : categories} />
+        </>
       )}
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-4 sm:hidden">

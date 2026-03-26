@@ -135,8 +135,9 @@ export function ProductActions({
   };
 
   return (
-    <div className="space-y-5">
-      <div className="inline-flex items-center rounded-full border border-white/70 bg-white/90 p-2 shadow-card">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="inline-flex w-fit items-center rounded-full border border-white/70 bg-white/90 p-2 shadow-card">
         <button
           type="button"
           onClick={() => setQuantity((value) => Math.max(1, value - 1))}
@@ -156,12 +157,12 @@ export function ProductActions({
         </button>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+      <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[22rem] lg:flex-1">
         <button
           type="button"
           onClick={handleAddToCart}
           disabled={pending}
-          className="button-primary w-full gap-2 sm:w-auto"
+          className="button-primary w-full gap-2"
         >
           <ShoppingBag className="h-4 w-4" />
           {pending ? "Adding..." : "Add to cart"}
@@ -170,11 +171,12 @@ export function ProductActions({
           type="button"
           onClick={handleWishlist}
           disabled={wishlistPending}
-          className="button-secondary w-full gap-2 sm:w-auto"
+          className="button-secondary w-full gap-2"
         >
           <Heart className="h-4 w-4" />
           {wishlistPending ? "Saving..." : "Save to wishlist"}
         </button>
+      </div>
       </div>
 
       {message ? <p className="text-sm font-medium text-rosewood">{message}</p> : null}

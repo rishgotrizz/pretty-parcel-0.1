@@ -8,6 +8,11 @@ export type StoreSettings = {
   faviconUrl: string;
   whatsNewText: string;
   storeMoodText: string;
+  enableNotification: boolean;
+  couponCode: string;
+  discountType: "percentage" | "flat";
+  discountValue: number;
+  minOrderValue: number;
   shippingPrice: number;
   freeShippingThreshold: number;
   specialCategoryName: string;
@@ -19,6 +24,11 @@ const defaultSettings: StoreSettings = {
   faviconUrl: "",
   whatsNewText: "",
   storeMoodText: "Soft, premium gifting with a polished premium feel.",
+  enableNotification: true,
+  couponCode: "",
+  discountType: "percentage",
+  discountValue: 0,
+  minOrderValue: 0,
   shippingPrice: 149,
   freeShippingThreshold: 1999,
   specialCategoryName: "Special Picks"
@@ -36,6 +46,11 @@ async function hydrateFromLegacySettings() {
     faviconUrl: brandingSetting?.value?.faviconUrl ?? "",
     whatsNewText: brandingSetting?.value?.whatsNewText ?? "",
     storeMoodText: brandingSetting?.value?.storeMoodText ?? defaultSettings.storeMoodText,
+    enableNotification: Boolean(brandingSetting?.value?.enableNotification ?? defaultSettings.enableNotification),
+    couponCode: String(brandingSetting?.value?.couponCode ?? defaultSettings.couponCode).toUpperCase(),
+    discountType: brandingSetting?.value?.discountType === "flat" ? "flat" : defaultSettings.discountType,
+    discountValue: Number(brandingSetting?.value?.discountValue ?? defaultSettings.discountValue),
+    minOrderValue: Number(brandingSetting?.value?.minOrderValue ?? defaultSettings.minOrderValue),
     shippingPrice: Number(brandingSetting?.value?.shippingPrice ?? defaultSettings.shippingPrice),
     freeShippingThreshold: Number(brandingSetting?.value?.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
     specialCategoryName:
@@ -62,6 +77,11 @@ export async function getSettings(): Promise<StoreSettings> {
       faviconUrl: settings.faviconUrl ?? "",
       whatsNewText: settings.whatsNewText ?? "",
       storeMoodText: settings.storeMoodText ?? defaultSettings.storeMoodText,
+      enableNotification: Boolean(settings.enableNotification ?? defaultSettings.enableNotification),
+      couponCode: String(settings.couponCode ?? defaultSettings.couponCode).toUpperCase(),
+      discountType: settings.discountType === "flat" ? "flat" : defaultSettings.discountType,
+      discountValue: Number(settings.discountValue ?? defaultSettings.discountValue),
+      minOrderValue: Number(settings.minOrderValue ?? defaultSettings.minOrderValue),
       shippingPrice: Number(settings.shippingPrice ?? defaultSettings.shippingPrice),
       freeShippingThreshold: Number(settings.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
       specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName
@@ -74,6 +94,11 @@ export async function getSettings(): Promise<StoreSettings> {
     faviconUrl: settings.faviconUrl ?? "",
     whatsNewText: settings.whatsNewText ?? "",
     storeMoodText: settings.storeMoodText ?? defaultSettings.storeMoodText,
+    enableNotification: Boolean(settings.enableNotification ?? defaultSettings.enableNotification),
+    couponCode: String(settings.couponCode ?? defaultSettings.couponCode).toUpperCase(),
+    discountType: settings.discountType === "flat" ? "flat" : defaultSettings.discountType,
+    discountValue: Number(settings.discountValue ?? defaultSettings.discountValue),
+    minOrderValue: Number(settings.minOrderValue ?? defaultSettings.minOrderValue),
     shippingPrice: Number(settings.shippingPrice ?? defaultSettings.shippingPrice),
     freeShippingThreshold: Number(settings.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
     specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName
@@ -101,6 +126,11 @@ export async function updateSettings(input: Partial<StoreSettings>): Promise<Sto
     faviconUrl: settings.faviconUrl ?? "",
     whatsNewText: settings.whatsNewText ?? "",
     storeMoodText: settings.storeMoodText ?? defaultSettings.storeMoodText,
+    enableNotification: Boolean(settings.enableNotification ?? defaultSettings.enableNotification),
+    couponCode: String(settings.couponCode ?? defaultSettings.couponCode).toUpperCase(),
+    discountType: settings.discountType === "flat" ? "flat" : defaultSettings.discountType,
+    discountValue: Number(settings.discountValue ?? defaultSettings.discountValue),
+    minOrderValue: Number(settings.minOrderValue ?? defaultSettings.minOrderValue),
     shippingPrice: Number(settings.shippingPrice ?? defaultSettings.shippingPrice),
     freeShippingThreshold: Number(settings.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
     specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName

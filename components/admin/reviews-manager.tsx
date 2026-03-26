@@ -30,6 +30,7 @@ export function ReviewsManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState("");
+  const [reviewToDelete, setReviewToDelete] = useState<ReviewItem | null>(null);
   const { pushToast } = useToast();
 
   useEffect(() => {
@@ -128,6 +129,7 @@ export function ReviewsManager() {
       }
 
       setReviews((current) => current.filter((review) => review._id !== id));
+      setReviewToDelete(null);
       pushToast("Review deleted successfully.", "success");
     } catch (error) {
       console.error("[ReviewsManager] delete failed", error);
@@ -179,7 +181,7 @@ export function ReviewsManager() {
             <p className="mt-3 text-sm leading-7 text-rosewood/80">{review.text}</p>
             <button
               type="button"
-              onClick={() => void deleteReview(review._id)}
+              onClick={() => setReviewToDelete(review)}
               disabled={deletingId === review._id}
               className="button-secondary mt-4 !py-2 text-rose-600"
             >
@@ -189,6 +191,36 @@ export function ReviewsManager() {
           </div>
         ))}
       </div>
+
+      {reviewToDelete ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-cocoa/40 px-4 py-6">
+          <div className="w-full max-w-md rounded-[2rem] bg-white p-6 shadow-[var(--shadow-card)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rosewood/65">Confirm delete</p>
+            <h3 className="mt-3 font-serif text-3xl text-cocoa">Delete this review?</h3>
+            <p className="mt-3 text-sm leading-7 text-rosewood/80">
+              This will permanently remove <span className="font-semibold text-cocoa">{reviewToDelete.name}</span>'s
+              review from the storefront.
+            </p>
+            <div className="mt-6 rounded-[1.25rem] bg-rosewater/80 p-4 text-sm text-rosewood/85">
+              <p className="font-semibold text-cocoa">{reviewToDelete.name}</p>
+              <p className="mt-2 line-clamp-4 leading-7">{reviewToDelete.text}</p>
+            </div>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setReviewToDelete(null)} className="button-secondary">
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void deleteReview(reviewToDelete._id)}
+                disabled={deletingId === reviewToDelete._id}
+                className="button-primary bg-rose-500 text-white hover:bg-rose-600"
+              >
+                {deletingId === reviewToDelete._id ? "Deleting..." : "Delete review"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

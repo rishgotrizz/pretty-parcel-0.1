@@ -17,8 +17,8 @@ export function ProductCard({ product }: { product: ProductType }) {
     : 0;
 
   return (
-    <Card className="group h-full overflow-hidden rounded-[2rem] border border-pink-100/80 bg-white/90 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-soft)]">
-      <Link href={`/products/${product.slug}`} className="block">
+    <Card className="group flex h-full overflow-hidden rounded-[2rem] border border-pink-100/80 bg-white/90 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-soft)]">
+      <Link href={`/products/${product.slug}`} className="flex h-full w-full flex-col">
         <div className="relative overflow-hidden rounded-t-[2rem]">
           <img
             src={productImage}
@@ -47,7 +47,7 @@ export function ProductCard({ product }: { product: ProductType }) {
           ) : null}
         </div>
 
-        <div className="flex h-[calc(100%-18rem)] flex-col gap-4 p-5 sm:p-6">
+        <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h3 className="font-serif text-[1.65rem] leading-tight text-slate-900">{product?.name || "Pretty Parcel Gift"}</h3>
@@ -72,7 +72,7 @@ export function ProductCard({ product }: { product: ProductType }) {
             ))}
           </div>
 
-          <div className="mt-auto flex items-end justify-between gap-3 border-t border-pink-100 pt-4">
+          <div className="mt-auto flex flex-wrap items-end justify-between gap-3 border-t border-pink-100 pt-4">
             <div className="space-y-1">
               <p className="text-xl font-semibold tracking-[-0.02em] text-slate-900">
                 {formatCurrency(salePrice ?? product?.price ?? 0)}

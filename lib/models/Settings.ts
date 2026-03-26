@@ -8,6 +8,11 @@ const settingsSchema = new Schema(
     faviconUrl: { type: String, trim: true, default: "" },
     whatsNewText: { type: String, trim: true, default: "" },
     storeMoodText: { type: String, trim: true, default: "Soft, premium gifting with a polished premium feel." },
+    enableNotification: { type: Boolean, default: true },
+    couponCode: { type: String, trim: true, uppercase: true, default: "" },
+    discountType: { type: String, enum: ["percentage", "flat"], default: "percentage" },
+    discountValue: { type: Number, default: 0, min: 0 },
+    minOrderValue: { type: Number, default: 0, min: 0 },
     shippingPrice: { type: Number, default: 149, min: 0 },
     freeShippingThreshold: { type: Number, default: 1999, min: 0 },
     specialCategoryName: { type: String, trim: true, default: "Special Picks" }

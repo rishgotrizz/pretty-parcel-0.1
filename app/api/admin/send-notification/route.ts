@@ -5,6 +5,7 @@ import { User } from "@/lib/models/User";
 import { logApiError, parseJsonBody } from "@/lib/server/api";
 import { requireAdmin } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
+import { getSettings } from "@/lib/server/settings";
 
 const audienceSchema = z.object({
   message: z.string().trim().min(3).max(220),
@@ -40,6 +41,11 @@ export async function POST(request: Request) {
     const parsed = audienceSchema.safeParse(await parseJsonBody(request));
     if (!parsed.success) {
       return Response.json({ error: "Please provide a valid message and audience." }, { status: 400 });
+    }
+
+    const settings = await getSettings();
+    if (!settings.enableNotification) {
+      return Response.json({ error: "Notifications are disabled in campaign settings." }, { status: 400 });
     }
 
     await connectToDatabase();

@@ -13,7 +13,12 @@ export async function GET() {
         faviconUrl: settings.faviconUrl,
         whatsNewText: settings.whatsNewText,
         storeMoodText: settings.storeMoodText,
-        specialCategoryName: settings.specialCategoryName
+        specialCategoryName: settings.specialCategoryName,
+        enableNotification: settings.enableNotification,
+        couponCode: settings.couponCode,
+        discountType: settings.discountType,
+        discountValue: settings.discountValue,
+        minOrderValue: settings.minOrderValue
       }
     },
     error: null,
@@ -25,7 +30,12 @@ export async function GET() {
       faviconUrl: settings.faviconUrl,
       whatsNewText: settings.whatsNewText,
       storeMoodText: settings.storeMoodText,
-      specialCategoryName: settings.specialCategoryName
+      specialCategoryName: settings.specialCategoryName,
+      enableNotification: settings.enableNotification,
+      couponCode: settings.couponCode,
+      discountType: settings.discountType,
+      discountValue: settings.discountValue,
+      minOrderValue: settings.minOrderValue
     }
   });
 }
