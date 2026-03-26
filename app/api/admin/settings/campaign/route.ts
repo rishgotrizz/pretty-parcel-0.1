@@ -64,7 +64,7 @@ export async function PATCH(request: Request) {
         {
           $set: {
             code: couponCode,
-            description: "Admin campaign coupon",
+            description: "Notification subscriber reward",
             type: parsed.data.discountType === "flat" ? "fixed" : "percentage",
             value: parsed.data.discountValue,
             minOrderValue: parsed.data.minOrderValue,

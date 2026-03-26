@@ -5,6 +5,7 @@ import { User } from "@/lib/models/User";
 import { logApiError, parseJsonBody } from "@/lib/server/api";
 import { requireUser } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
+import { getSettings } from "@/lib/server/settings";
 
 const rewardSchema = z.object({
   permission: z.literal("granted")
@@ -23,56 +24,81 @@ export async function POST(request: Request) {
     }
 
     await connectToDatabase();
+    const settings = await getSettings();
 
     const user = await User.findById(currentUser._id);
     if (!user) {
       return Response.json({ success: false, error: "User not found." }, { status: 404 });
     }
 
+    const rewardCode = String(settings.couponCode ?? "").trim().toUpperCase();
+    const rewardType = settings.discountType === "flat" ? "fixed" : "percentage";
+    const rewardValue = Number(settings.discountValue ?? 0);
+    const rewardMinOrderValue = Number(settings.minOrderValue ?? 0);
+    const notificationsEnabled = Boolean(settings.enableNotification);
+
+    if (!notificationsEnabled) {
+      return Response.json({ success: false, error: "Notification rewards are currently disabled." }, { status: 400 });
+    }
+
     if (user.notificationRewardClaimed) {
       return Response.json({
         success: true,
         alreadyClaimed: true,
-        coupon: {
-          code: "NOTIFY100",
-          value: 100
-        }
+        coupon: rewardCode
+          ? {
+              code: rewardCode,
+              type: rewardType,
+              value: rewardValue,
+              minOrderValue: rewardMinOrderValue
+            }
+          : null
       });
     }
 
-    const coupon = await Coupon.findOneAndUpdate(
-      { code: "NOTIFY100" },
-      {
-        $set: {
-          code: "NOTIFY100",
-          description: "Rs.100 reward for enabling browser notifications",
-          type: "fixed",
-          value: 100,
-          minOrderValue: 0,
-          autoApply: false,
-          isActive: true
+    let coupon = null;
+    const hasRewardCoupon = Boolean(rewardCode && rewardValue > 0);
+
+    if (hasRewardCoupon) {
+      coupon = await Coupon.findOneAndUpdate(
+        { code: rewardCode },
+        {
+          $set: {
+            code: rewardCode,
+            description: "Notification subscriber reward",
+            type: rewardType,
+            value: rewardValue,
+            minOrderValue: rewardMinOrderValue,
+            autoApply: false,
+            isActive: true
+          },
+          $addToSet: {
+            issuedToUsers: user._id
+          }
         },
-        $addToSet: {
-          issuedToUsers: user._id
-        }
-      },
-      { upsert: true, new: true }
-    );
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
 
     user.notificationPermission = "granted";
     user.notificationEnabled = true;
-    user.notificationRewardClaimed = true;
+    user.notificationRewardClaimed = hasRewardCoupon;
     user.notificationPromptedAt = new Date();
     user.lastSeenAt = new Date();
     await user.save();
 
     return Response.json({
       success: true,
-      coupon: {
-        code: coupon.code,
-        description: coupon.description ?? "",
-        value: coupon.value
-      }
+      coupon: coupon
+        ? {
+            code: coupon.code,
+            description: coupon.description ?? "",
+            type: coupon.type,
+            value: coupon.value,
+            minOrderValue: coupon.minOrderValue ?? 0
+          }
+        : null,
+      rewardConfigured: hasRewardCoupon
     });
   } catch (error) {
     logApiError("api/reward-notification", error);

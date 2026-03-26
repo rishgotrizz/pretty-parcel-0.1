@@ -8,6 +8,22 @@ import { useToast } from "@/components/providers/toast-provider";
 
 const PROMPT_KEY = "pretty-parcel-notification-prompted";
 
+type RewardSettings = {
+  enableNotification: boolean;
+  couponCode: string;
+  discountType: "percentage" | "flat";
+  discountValue: number;
+  minOrderValue: number;
+};
+
+const defaultRewardSettings: RewardSettings = {
+  enableNotification: true,
+  couponCode: "",
+  discountType: "flat",
+  discountValue: 0,
+  minOrderValue: 0
+};
+
 function getNotificationPermission() {
   if (typeof window === "undefined" || !("Notification" in window)) {
     return "unsupported";
@@ -29,6 +45,47 @@ export function NotificationCenter() {
   const { pushToast } = useToast();
   const [visible, setVisible] = useState(false);
   const [requesting, setRequesting] = useState(false);
+  const [rewardSettings, setRewardSettings] = useState<RewardSettings>(defaultRewardSettings);
+
+  useEffect(() => {
+    async function loadRewardSettings() {
+      try {
+        const response = await fetch("/api/settings", {
+          credentials: "include",
+          headers: { Accept: "application/json" },
+          cache: "no-store"
+        });
+        const raw = await response.text();
+        const data = raw ? JSON.parse(raw) : {};
+        const payload = data?.data?.settings ?? data?.settings ?? {};
+
+        setRewardSettings({
+          enableNotification: Boolean(payload?.enableNotification ?? true),
+          couponCode: typeof payload?.couponCode === "string" ? payload.couponCode : "",
+          discountType: payload?.discountType === "percentage" ? "percentage" : "flat",
+          discountValue: Number(payload?.discountValue ?? 0),
+          minOrderValue: Number(payload?.minOrderValue ?? 0)
+        });
+      } catch (error) {
+        console.error("[NotificationCenter] settings load failed", error);
+        setRewardSettings(defaultRewardSettings);
+      }
+    }
+
+    void loadRewardSettings();
+  }, []);
+
+  const rewardText = useMemo(() => {
+    if (!rewardSettings.enableNotification || rewardSettings.discountValue <= 0 || !rewardSettings.couponCode) {
+      return null;
+    }
+
+    if (rewardSettings.discountType === "percentage") {
+      return `${rewardSettings.discountValue}% off coupon`;
+    }
+
+    return `Rs.${rewardSettings.discountValue} coupon`;
+  }, [rewardSettings]);
 
   const canPrompt = useMemo(() => {
     if (typeof window === "undefined") {
@@ -44,6 +101,10 @@ export function NotificationCenter() {
       return false;
     }
 
+    if (!rewardSettings.enableNotification) {
+      return false;
+    }
+
     return (
       !user.notificationRewardClaimed &&
       (
@@ -51,7 +112,7 @@ export function NotificationCenter() {
         (permission === "granted" && !user.notificationEnabled)
       )
     );
-  }, [user]);
+  }, [rewardSettings.enableNotification, user]);
 
   useEffect(() => {
     setVisible(canPrompt);
@@ -154,7 +215,16 @@ export function NotificationCenter() {
         return;
       }
 
-      pushToast("You received Rs.100 reward coupon!", "success");
+      if (payload?.coupon?.code) {
+        const valueLabel =
+          payload?.coupon?.type === "percentage"
+            ? `${payload?.coupon?.value ?? 0}% off`
+            : `Rs.${payload?.coupon?.value ?? 0}`;
+        pushToast(`Reward unlocked: ${payload.coupon.code} for ${valueLabel}.`, "success");
+        return;
+      }
+
+      pushToast("Notifications enabled successfully.", "success");
     } catch (error) {
       console.error("[NotificationCenter] permission request failed", error);
       pushToast("Could not enable notifications.", "error");
@@ -174,15 +244,24 @@ export function NotificationCenter() {
           <Bell className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-cocoa">Enable notifications & get Rs.100 coupon</p>
-          <p className="mt-2 text-sm leading-6 text-rosewood/75">
-            Turn on browser notifications to hear about offers, drops, and unlock your one-time `NOTIFY100` reward.
+          <p className="text-sm font-semibold text-cocoa">
+            {rewardText ? `Enable notifications & get ${rewardText}` : "Enable notifications"}
           </p>
+          <p className="mt-2 text-sm leading-6 text-rosewood/75">
+            {rewardText && rewardSettings.couponCode
+              ? `Turn on browser notifications to hear about offers, drops, and unlock your one-time ${rewardSettings.couponCode} reward.`
+              : "Turn on browser notifications to hear about offers, drops, and new gift launches."}
+          </p>
+          {rewardSettings.minOrderValue > 0 && rewardText ? (
+            <p className="mt-2 text-xs font-medium text-rosewood/65">
+              Valid on orders above Rs.{rewardSettings.minOrderValue}.
+            </p>
+          ) : null}
         </div>
       </div>
       <button type="button" onClick={() => void enableNotifications()} disabled={requesting} className="button-primary mt-4 w-full">
         <Gift className="h-4 w-4" />
-        {requesting ? "Checking permission..." : "Enable notifications & get Rs.100 coupon"}
+        {requesting ? "Checking permission..." : rewardText ? `Enable notifications & get ${rewardText}` : "Enable notifications"}
       </button>
     </div>
   );

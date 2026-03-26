@@ -104,7 +104,7 @@ export function CampaignSettingsPanel() {
         </div>
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Coupon + notification panel</p>
-          <h2 className="mt-2 font-serif text-3xl text-cocoa">Campaign controls</h2>
+          <h2 className="mt-2 font-serif text-3xl text-cocoa">Notification reward controls</h2>
         </div>
       </div>
 
@@ -117,7 +117,7 @@ export function CampaignSettingsPanel() {
               <BellRing className="h-5 w-5 text-berry" />
               <div>
                 <p className="text-sm font-semibold text-cocoa">Enable notifications</p>
-                <p className="text-xs text-rosewood/70">Control whether admin campaigns can be sent to subscribers.</p>
+                <p className="text-xs text-rosewood/70">Control whether customers can claim the notification reward and receive campaigns.</p>
               </div>
             </div>
             <input
@@ -129,17 +129,17 @@ export function CampaignSettingsPanel() {
           </label>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-cocoa">Coupon code</label>
+            <label className="mb-2 block text-sm font-semibold text-cocoa">Reward coupon code</label>
             <input
               value={settings.couponCode}
               onChange={(event) => setSettings((current) => ({ ...current, couponCode: event.target.value.toUpperCase() }))}
-              placeholder="SPRING100"
+              placeholder="NOTIFYGIFT"
               className="w-full rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-cocoa">Discount type</label>
+            <label className="mb-2 block text-sm font-semibold text-cocoa">Reward type</label>
             <select
               value={settings.discountType}
               onChange={(event) => setSettings((current) => ({ ...current, discountType: event.target.value as "percentage" | "flat" }))}
@@ -151,7 +151,7 @@ export function CampaignSettingsPanel() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-cocoa">Discount value</label>
+            <label className="mb-2 block text-sm font-semibold text-cocoa">Reward value</label>
             <input
               type="number"
               min="0"
@@ -174,8 +174,22 @@ export function CampaignSettingsPanel() {
             />
           </div>
 
+          <div className="rounded-[1.25rem] bg-rosewater/80 p-4 text-sm leading-6 text-rosewood/80 md:col-span-2">
+            {settings.couponCode && Number(settings.discountValue || 0) > 0 ? (
+              <>
+                Customers who allow notifications will receive <span className="font-semibold text-cocoa">{settings.couponCode}</span> for{" "}
+                <span className="font-semibold text-cocoa">
+                  {settings.discountType === "percentage" ? `${settings.discountValue}% off` : `Rs.${settings.discountValue} off`}
+                </span>
+                {Number(settings.minOrderValue || 0) > 0 ? ` on orders above Rs.${settings.minOrderValue}.` : "."}
+              </>
+            ) : (
+              "You can leave the reward fields empty if you only want to enable notifications without granting a coupon."
+            )}
+          </div>
+
           <button type="button" onClick={() => void saveSettings()} disabled={saving} className="button-primary md:col-span-2">
-            {saving ? "Saving campaign..." : "Save campaign settings"}
+            {saving ? "Saving reward..." : "Save notification reward"}
           </button>
         </div>
       ) : null}
