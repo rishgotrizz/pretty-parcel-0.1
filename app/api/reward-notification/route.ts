@@ -31,10 +31,10 @@ export async function POST(request: Request) {
       return Response.json({ success: false, error: "User not found." }, { status: 404 });
     }
 
-    const rewardCode = String(settings.couponCode ?? "").trim().toUpperCase();
-    const rewardType = settings.discountType === "flat" ? "fixed" : "percentage";
-    const rewardValue = Number(settings.discountValue ?? 0);
-    const rewardMinOrderValue = Number(settings.minOrderValue ?? 0);
+    const rewardCode = String(settings.notificationRewardCode ?? "").trim().toUpperCase();
+    const rewardType = settings.notificationRewardType === "flat" ? "fixed" : "percentage";
+    const rewardValue = Number(settings.notificationRewardValue ?? 0);
+    const rewardMinOrderValue = Number(settings.notificationRewardMinOrderValue ?? 0);
     const notificationsEnabled = Boolean(settings.enableNotification);
 
     if (!notificationsEnabled) {
@@ -70,7 +70,8 @@ export async function POST(request: Request) {
             value: rewardValue,
             minOrderValue: rewardMinOrderValue,
             autoApply: false,
-            isActive: true
+            isActive: true,
+            source: "notification_reward"
           },
           $addToSet: {
             issuedToUsers: user._id

@@ -20,6 +20,12 @@ const couponSchema = new Schema(
     expiresAt: { type: Date },
     isActive: { type: Boolean, default: true },
     autoApply: { type: Boolean, default: false },
+    source: {
+      type: String,
+      enum: ["general", "notification_reward"],
+      default: "general",
+      index: true
+    },
     applicableCategories: [{ type: String }],
     issuedToUsers: [{ type: Schema.Types.ObjectId, ref: "User" }]
   },

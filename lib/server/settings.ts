@@ -13,6 +13,10 @@ export type StoreSettings = {
   discountType: "percentage" | "flat";
   discountValue: number;
   minOrderValue: number;
+  notificationRewardCode: string;
+  notificationRewardType: "percentage" | "flat";
+  notificationRewardValue: number;
+  notificationRewardMinOrderValue: number;
   shippingPrice: number;
   freeShippingThreshold: number;
   specialCategoryName: string;
@@ -29,6 +33,10 @@ const defaultSettings: StoreSettings = {
   discountType: "percentage",
   discountValue: 0,
   minOrderValue: 0,
+  notificationRewardCode: "",
+  notificationRewardType: "flat",
+  notificationRewardValue: 0,
+  notificationRewardMinOrderValue: 0,
   shippingPrice: 149,
   freeShippingThreshold: 1999,
   specialCategoryName: "Special Picks"
@@ -51,6 +59,27 @@ async function hydrateFromLegacySettings() {
     discountType: brandingSetting?.value?.discountType === "flat" ? "flat" : defaultSettings.discountType,
     discountValue: Number(brandingSetting?.value?.discountValue ?? defaultSettings.discountValue),
     minOrderValue: Number(brandingSetting?.value?.minOrderValue ?? defaultSettings.minOrderValue),
+    notificationRewardCode: String(
+      brandingSetting?.value?.notificationRewardCode ??
+        brandingSetting?.value?.couponCode ??
+        defaultSettings.notificationRewardCode
+    ).toUpperCase(),
+    notificationRewardType:
+      brandingSetting?.value?.notificationRewardType === "percentage"
+        ? "percentage"
+        : brandingSetting?.value?.discountType === "percentage"
+          ? "percentage"
+          : defaultSettings.notificationRewardType,
+    notificationRewardValue: Number(
+      brandingSetting?.value?.notificationRewardValue ??
+        brandingSetting?.value?.discountValue ??
+        defaultSettings.notificationRewardValue
+    ),
+    notificationRewardMinOrderValue: Number(
+      brandingSetting?.value?.notificationRewardMinOrderValue ??
+        brandingSetting?.value?.minOrderValue ??
+        defaultSettings.notificationRewardMinOrderValue
+    ),
     shippingPrice: Number(brandingSetting?.value?.shippingPrice ?? defaultSettings.shippingPrice),
     freeShippingThreshold: Number(brandingSetting?.value?.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
     specialCategoryName:
@@ -82,6 +111,23 @@ export async function getSettings(): Promise<StoreSettings> {
       discountType: settings.discountType === "flat" ? "flat" : defaultSettings.discountType,
       discountValue: Number(settings.discountValue ?? defaultSettings.discountValue),
       minOrderValue: Number(settings.minOrderValue ?? defaultSettings.minOrderValue),
+      notificationRewardCode: String(
+        settings.notificationRewardCode ?? settings.couponCode ?? defaultSettings.notificationRewardCode
+      ).toUpperCase(),
+      notificationRewardType:
+        settings.notificationRewardType === "percentage"
+          ? "percentage"
+          : settings.discountType === "percentage"
+            ? "percentage"
+            : defaultSettings.notificationRewardType,
+      notificationRewardValue: Number(
+        settings.notificationRewardValue ?? settings.discountValue ?? defaultSettings.notificationRewardValue
+      ),
+      notificationRewardMinOrderValue: Number(
+        settings.notificationRewardMinOrderValue ??
+          settings.minOrderValue ??
+          defaultSettings.notificationRewardMinOrderValue
+      ),
       shippingPrice: Number(settings.shippingPrice ?? defaultSettings.shippingPrice),
       freeShippingThreshold: Number(settings.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
       specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName
@@ -99,6 +145,23 @@ export async function getSettings(): Promise<StoreSettings> {
     discountType: settings.discountType === "flat" ? "flat" : defaultSettings.discountType,
     discountValue: Number(settings.discountValue ?? defaultSettings.discountValue),
     minOrderValue: Number(settings.minOrderValue ?? defaultSettings.minOrderValue),
+    notificationRewardCode: String(
+      settings.notificationRewardCode ?? settings.couponCode ?? defaultSettings.notificationRewardCode
+    ).toUpperCase(),
+    notificationRewardType:
+      settings.notificationRewardType === "percentage"
+        ? "percentage"
+        : settings.discountType === "percentage"
+          ? "percentage"
+          : defaultSettings.notificationRewardType,
+    notificationRewardValue: Number(
+      settings.notificationRewardValue ?? settings.discountValue ?? defaultSettings.notificationRewardValue
+    ),
+    notificationRewardMinOrderValue: Number(
+      settings.notificationRewardMinOrderValue ??
+        settings.minOrderValue ??
+        defaultSettings.notificationRewardMinOrderValue
+    ),
     shippingPrice: Number(settings.shippingPrice ?? defaultSettings.shippingPrice),
     freeShippingThreshold: Number(settings.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
     specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName
@@ -131,6 +194,23 @@ export async function updateSettings(input: Partial<StoreSettings>): Promise<Sto
     discountType: settings.discountType === "flat" ? "flat" : defaultSettings.discountType,
     discountValue: Number(settings.discountValue ?? defaultSettings.discountValue),
     minOrderValue: Number(settings.minOrderValue ?? defaultSettings.minOrderValue),
+    notificationRewardCode: String(
+      settings.notificationRewardCode ?? settings.couponCode ?? defaultSettings.notificationRewardCode
+    ).toUpperCase(),
+    notificationRewardType:
+      settings.notificationRewardType === "percentage"
+        ? "percentage"
+        : settings.discountType === "percentage"
+          ? "percentage"
+          : defaultSettings.notificationRewardType,
+    notificationRewardValue: Number(
+      settings.notificationRewardValue ?? settings.discountValue ?? defaultSettings.notificationRewardValue
+    ),
+    notificationRewardMinOrderValue: Number(
+      settings.notificationRewardMinOrderValue ??
+        settings.minOrderValue ??
+        defaultSettings.notificationRewardMinOrderValue
+    ),
     shippingPrice: Number(settings.shippingPrice ?? defaultSettings.shippingPrice),
     freeShippingThreshold: Number(settings.freeShippingThreshold ?? defaultSettings.freeShippingThreshold),
     specialCategoryName: settings.specialCategoryName ?? defaultSettings.specialCategoryName

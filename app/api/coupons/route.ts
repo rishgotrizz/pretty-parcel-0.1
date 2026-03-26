@@ -1,10 +1,16 @@
 import { Coupon } from "@/lib/models/Coupon";
 import { connectToDatabase } from "@/lib/server/db";
 import { isCouponCurrentlyActive } from "@/lib/server/pricing";
+import { getSettings } from "@/lib/server/settings";
 
 export async function GET() {
   await connectToDatabase();
-  const coupons = await Coupon.find({ isActive: true }).sort({ createdAt: -1 }).lean<any[]>();
+  const settings = await getSettings();
+  const coupons = await Coupon.find({
+    isActive: true,
+    source: { $ne: "notification_reward" },
+    ...(settings.notificationRewardCode ? { code: { $ne: settings.notificationRewardCode } } : {})
+  }).sort({ createdAt: -1 }).lean<any[]>();
   const validCoupons = coupons.filter((coupon) => isCouponCurrentlyActive(coupon) && !coupon.issuedToUsers?.length);
 
   return Response.json({

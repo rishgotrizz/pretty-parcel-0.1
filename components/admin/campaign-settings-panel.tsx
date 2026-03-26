@@ -7,18 +7,18 @@ import { useToast } from "@/components/providers/toast-provider";
 
 type CampaignSettings = {
   enableNotification: boolean;
-  couponCode: string;
-  discountType: "percentage" | "flat";
-  discountValue: string;
-  minOrderValue: string;
+  notificationRewardCode: string;
+  notificationRewardType: "percentage" | "flat";
+  notificationRewardValue: string;
+  notificationRewardMinOrderValue: string;
 };
 
 const defaultState: CampaignSettings = {
   enableNotification: true,
-  couponCode: "",
-  discountType: "percentage",
-  discountValue: "",
-  minOrderValue: ""
+  notificationRewardCode: "",
+  notificationRewardType: "flat",
+  notificationRewardValue: "",
+  notificationRewardMinOrderValue: ""
 };
 
 export function CampaignSettingsPanel() {
@@ -40,10 +40,11 @@ export function CampaignSettingsPanel() {
 
         setSettings({
           enableNotification: Boolean(payload?.enableNotification ?? true),
-          couponCode: typeof payload?.couponCode === "string" ? payload.couponCode : "",
-          discountType: payload?.discountType === "flat" ? "flat" : "percentage",
-          discountValue: payload?.discountValue ? String(payload.discountValue) : "",
-          minOrderValue: payload?.minOrderValue ? String(payload.minOrderValue) : ""
+          notificationRewardCode:
+            typeof payload?.notificationRewardCode === "string" ? payload.notificationRewardCode : "",
+          notificationRewardType: payload?.notificationRewardType === "percentage" ? "percentage" : "flat",
+          notificationRewardValue: payload?.notificationRewardValue ? String(payload.notificationRewardValue) : "",
+          notificationRewardMinOrderValue: payload?.notificationRewardMinOrderValue ? String(payload.notificationRewardMinOrderValue) : ""
         });
       } catch (error) {
         console.error("[CampaignSettingsPanel] load failed", error);
@@ -65,10 +66,10 @@ export function CampaignSettingsPanel() {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           enableNotification: settings.enableNotification,
-          couponCode: settings.couponCode,
-          discountType: settings.discountType,
-          discountValue: Number(settings.discountValue || 0),
-          minOrderValue: Number(settings.minOrderValue || 0)
+          notificationRewardCode: settings.notificationRewardCode,
+          notificationRewardType: settings.notificationRewardType,
+          notificationRewardValue: Number(settings.notificationRewardValue || 0),
+          notificationRewardMinOrderValue: Number(settings.notificationRewardMinOrderValue || 0)
         })
       });
       const raw = await response.text();
@@ -82,10 +83,11 @@ export function CampaignSettingsPanel() {
 
       setSettings({
         enableNotification: Boolean(payload?.enableNotification ?? settings.enableNotification),
-        couponCode: typeof payload?.couponCode === "string" ? payload.couponCode : "",
-        discountType: payload?.discountType === "flat" ? "flat" : "percentage",
-        discountValue: payload?.discountValue ? String(payload.discountValue) : "",
-        minOrderValue: payload?.minOrderValue ? String(payload.minOrderValue) : ""
+        notificationRewardCode:
+          typeof payload?.notificationRewardCode === "string" ? payload.notificationRewardCode : "",
+        notificationRewardType: payload?.notificationRewardType === "percentage" ? "percentage" : "flat",
+        notificationRewardValue: payload?.notificationRewardValue ? String(payload.notificationRewardValue) : "",
+        notificationRewardMinOrderValue: payload?.notificationRewardMinOrderValue ? String(payload.notificationRewardMinOrderValue) : ""
       });
       pushToast("Campaign settings saved.", "success");
     } catch (error) {
@@ -105,6 +107,7 @@ export function CampaignSettingsPanel() {
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rosewood/70">Coupon + notification panel</p>
           <h2 className="mt-2 font-serif text-3xl text-cocoa">Notification reward controls</h2>
+          <p className="mt-2 text-sm leading-6 text-rosewood/75">This reward is separate from your regular store coupons and discount library.</p>
         </div>
       </div>
 
@@ -131,8 +134,10 @@ export function CampaignSettingsPanel() {
           <div>
             <label className="mb-2 block text-sm font-semibold text-cocoa">Reward coupon code</label>
             <input
-              value={settings.couponCode}
-              onChange={(event) => setSettings((current) => ({ ...current, couponCode: event.target.value.toUpperCase() }))}
+              value={settings.notificationRewardCode}
+              onChange={(event) =>
+                setSettings((current) => ({ ...current, notificationRewardCode: event.target.value.toUpperCase() }))
+              }
               placeholder="NOTIFYGIFT"
               className="w-full rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
             />
@@ -141,8 +146,10 @@ export function CampaignSettingsPanel() {
           <div>
             <label className="mb-2 block text-sm font-semibold text-cocoa">Reward type</label>
             <select
-              value={settings.discountType}
-              onChange={(event) => setSettings((current) => ({ ...current, discountType: event.target.value as "percentage" | "flat" }))}
+              value={settings.notificationRewardType}
+              onChange={(event) =>
+                setSettings((current) => ({ ...current, notificationRewardType: event.target.value as "percentage" | "flat" }))
+              }
               className="w-full rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
             >
               <option value="percentage">Percentage</option>
@@ -155,8 +162,10 @@ export function CampaignSettingsPanel() {
             <input
               type="number"
               min="0"
-              value={settings.discountValue}
-              onChange={(event) => setSettings((current) => ({ ...current, discountValue: event.target.value }))}
+              value={settings.notificationRewardValue}
+              onChange={(event) =>
+                setSettings((current) => ({ ...current, notificationRewardValue: event.target.value }))
+              }
               placeholder="100"
               className="w-full rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
             />
@@ -167,21 +176,28 @@ export function CampaignSettingsPanel() {
             <input
               type="number"
               min="0"
-              value={settings.minOrderValue}
-              onChange={(event) => setSettings((current) => ({ ...current, minOrderValue: event.target.value }))}
+              value={settings.notificationRewardMinOrderValue}
+              onChange={(event) =>
+                setSettings((current) => ({ ...current, notificationRewardMinOrderValue: event.target.value }))
+              }
               placeholder="999"
               className="w-full rounded-[1rem] border border-pink-100 bg-white/90 px-4 py-3 text-sm outline-none"
             />
           </div>
 
           <div className="rounded-[1.25rem] bg-rosewater/80 p-4 text-sm leading-6 text-rosewood/80 md:col-span-2">
-            {settings.couponCode && Number(settings.discountValue || 0) > 0 ? (
+            {settings.notificationRewardCode && Number(settings.notificationRewardValue || 0) > 0 ? (
               <>
-                Customers who allow notifications will receive <span className="font-semibold text-cocoa">{settings.couponCode}</span> for{" "}
+                Customers who allow notifications will receive{" "}
+                <span className="font-semibold text-cocoa">{settings.notificationRewardCode}</span> for{" "}
                 <span className="font-semibold text-cocoa">
-                  {settings.discountType === "percentage" ? `${settings.discountValue}% off` : `Rs.${settings.discountValue} off`}
+                  {settings.notificationRewardType === "percentage"
+                    ? `${settings.notificationRewardValue}% off`
+                    : `Rs.${settings.notificationRewardValue} off`}
                 </span>
-                {Number(settings.minOrderValue || 0) > 0 ? ` on orders above Rs.${settings.minOrderValue}.` : "."}
+                {Number(settings.notificationRewardMinOrderValue || 0) > 0
+                  ? ` on orders above Rs.${settings.notificationRewardMinOrderValue}.`
+                  : "."}
               </>
             ) : (
               "You can leave the reward fields empty if you only want to enable notifications without granting a coupon."

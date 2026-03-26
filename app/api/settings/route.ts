@@ -18,7 +18,11 @@ export async function GET() {
         couponCode: settings.couponCode,
         discountType: settings.discountType,
         discountValue: settings.discountValue,
-        minOrderValue: settings.minOrderValue
+        minOrderValue: settings.minOrderValue,
+        notificationRewardCode: settings.notificationRewardCode,
+        notificationRewardType: settings.notificationRewardType,
+        notificationRewardValue: settings.notificationRewardValue,
+        notificationRewardMinOrderValue: settings.notificationRewardMinOrderValue
       }
     },
     error: null,
@@ -35,7 +39,11 @@ export async function GET() {
       couponCode: settings.couponCode,
       discountType: settings.discountType,
       discountValue: settings.discountValue,
-      minOrderValue: settings.minOrderValue
+      minOrderValue: settings.minOrderValue,
+      notificationRewardCode: settings.notificationRewardCode,
+      notificationRewardType: settings.notificationRewardType,
+      notificationRewardValue: settings.notificationRewardValue,
+      notificationRewardMinOrderValue: settings.notificationRewardMinOrderValue
     }
   });
 }

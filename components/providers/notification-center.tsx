@@ -10,18 +10,18 @@ const PROMPT_KEY = "pretty-parcel-notification-prompted";
 
 type RewardSettings = {
   enableNotification: boolean;
-  couponCode: string;
-  discountType: "percentage" | "flat";
-  discountValue: number;
-  minOrderValue: number;
+  notificationRewardCode: string;
+  notificationRewardType: "percentage" | "flat";
+  notificationRewardValue: number;
+  notificationRewardMinOrderValue: number;
 };
 
 const defaultRewardSettings: RewardSettings = {
   enableNotification: true,
-  couponCode: "",
-  discountType: "flat",
-  discountValue: 0,
-  minOrderValue: 0
+  notificationRewardCode: "",
+  notificationRewardType: "flat",
+  notificationRewardValue: 0,
+  notificationRewardMinOrderValue: 0
 };
 
 function getNotificationPermission() {
@@ -61,10 +61,12 @@ export function NotificationCenter() {
 
         setRewardSettings({
           enableNotification: Boolean(payload?.enableNotification ?? true),
-          couponCode: typeof payload?.couponCode === "string" ? payload.couponCode : "",
-          discountType: payload?.discountType === "percentage" ? "percentage" : "flat",
-          discountValue: Number(payload?.discountValue ?? 0),
-          minOrderValue: Number(payload?.minOrderValue ?? 0)
+          notificationRewardCode:
+            typeof payload?.notificationRewardCode === "string" ? payload.notificationRewardCode : "",
+          notificationRewardType:
+            payload?.notificationRewardType === "percentage" ? "percentage" : "flat",
+          notificationRewardValue: Number(payload?.notificationRewardValue ?? 0),
+          notificationRewardMinOrderValue: Number(payload?.notificationRewardMinOrderValue ?? 0)
         });
       } catch (error) {
         console.error("[NotificationCenter] settings load failed", error);
@@ -76,15 +78,19 @@ export function NotificationCenter() {
   }, []);
 
   const rewardText = useMemo(() => {
-    if (!rewardSettings.enableNotification || rewardSettings.discountValue <= 0 || !rewardSettings.couponCode) {
+    if (
+      !rewardSettings.enableNotification ||
+      rewardSettings.notificationRewardValue <= 0 ||
+      !rewardSettings.notificationRewardCode
+    ) {
       return null;
     }
 
-    if (rewardSettings.discountType === "percentage") {
-      return `${rewardSettings.discountValue}% off coupon`;
+    if (rewardSettings.notificationRewardType === "percentage") {
+      return `${rewardSettings.notificationRewardValue}% off coupon`;
     }
 
-    return `Rs.${rewardSettings.discountValue} coupon`;
+    return `Rs.${rewardSettings.notificationRewardValue} coupon`;
   }, [rewardSettings]);
 
   const canPrompt = useMemo(() => {
@@ -248,13 +254,13 @@ export function NotificationCenter() {
             {rewardText ? `Enable notifications & get ${rewardText}` : "Enable notifications"}
           </p>
           <p className="mt-2 text-sm leading-6 text-rosewood/75">
-            {rewardText && rewardSettings.couponCode
-              ? `Turn on browser notifications to hear about offers, drops, and unlock your one-time ${rewardSettings.couponCode} reward.`
+            {rewardText && rewardSettings.notificationRewardCode
+              ? `Turn on browser notifications to hear about offers, drops, and unlock your one-time ${rewardSettings.notificationRewardCode} reward.`
               : "Turn on browser notifications to hear about offers, drops, and new gift launches."}
           </p>
-          {rewardSettings.minOrderValue > 0 && rewardText ? (
+          {rewardSettings.notificationRewardMinOrderValue > 0 && rewardText ? (
             <p className="mt-2 text-xs font-medium text-rosewood/65">
-              Valid on orders above Rs.{rewardSettings.minOrderValue}.
+              Valid on orders above Rs.{rewardSettings.notificationRewardMinOrderValue}.
             </p>
           ) : null}
         </div>

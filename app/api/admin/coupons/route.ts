@@ -4,6 +4,7 @@ import { Coupon } from "@/lib/models/Coupon";
 import { isDuplicateKeyError, isObjectId, logApiError, parseJsonBody } from "@/lib/server/api";
 import { requireAdmin } from "@/lib/server/auth";
 import { connectToDatabase } from "@/lib/server/db";
+import { getSettings } from "@/lib/server/settings";
 
 const couponSchema = z.object({
   code: z.string().trim().min(3).max(40),
@@ -25,7 +26,13 @@ export async function GET() {
   }
 
   await connectToDatabase();
-  const coupons = await Coupon.find().sort({ createdAt: -1 }).lean();
+  const settings = await getSettings();
+  const coupons = await Coupon.find({
+    source: { $ne: "notification_reward" },
+    ...(settings.notificationRewardCode ? { code: { $ne: settings.notificationRewardCode } } : {})
+  })
+    .sort({ createdAt: -1 })
+    .lean();
   return Response.json({
     coupons: (coupons as any[]).map((coupon) => ({
       _id: coupon._id.toString(),
@@ -59,7 +66,8 @@ export async function POST(request: Request) {
       value: parsed.data.value,
       autoApply: parsed.data.autoApply === "true",
       minOrderValue: parsed.data.minOrderValue ?? 0,
-      isActive: true
+      isActive: true,
+      source: "general"
     });
 
     return Response.json({ coupon: { _id: coupon._id.toString(), code: coupon.code } });
@@ -89,14 +97,18 @@ export async function PATCH(request: Request) {
     }
 
     await connectToDatabase();
-    const updated = await Coupon.findByIdAndUpdate(parsed.data.id, {
-      code: parsed.data.code.toUpperCase(),
-      description: parsed.data.description || undefined,
-      type: parsed.data.type,
-      value: parsed.data.value,
-      minOrderValue: parsed.data.minOrderValue ?? 0,
-      autoApply: parsed.data.autoApply === "true"
-    });
+    const updated = await Coupon.findOneAndUpdate(
+      { _id: parsed.data.id, source: { $ne: "notification_reward" } },
+      {
+        code: parsed.data.code.toUpperCase(),
+        description: parsed.data.description || undefined,
+        type: parsed.data.type,
+        value: parsed.data.value,
+        minOrderValue: parsed.data.minOrderValue ?? 0,
+        autoApply: parsed.data.autoApply === "true",
+        source: "general"
+      }
+    );
     if (!updated) {
       return Response.json({ error: "Coupon not found." }, { status: 404 });
     }
@@ -126,7 +138,7 @@ export async function DELETE(request: Request) {
 
   try {
     await connectToDatabase();
-    const deleted = await Coupon.findByIdAndDelete(id);
+    const deleted = await Coupon.findOneAndDelete({ _id: id, source: { $ne: "notification_reward" } });
     if (!deleted) {
       return Response.json({ error: "Coupon not found." }, { status: 404 });
     }

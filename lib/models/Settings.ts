@@ -13,6 +13,10 @@ const settingsSchema = new Schema(
     discountType: { type: String, enum: ["percentage", "flat"], default: "percentage" },
     discountValue: { type: Number, default: 0, min: 0 },
     minOrderValue: { type: Number, default: 0, min: 0 },
+    notificationRewardCode: { type: String, trim: true, uppercase: true, default: "" },
+    notificationRewardType: { type: String, enum: ["percentage", "flat"], default: "flat" },
+    notificationRewardValue: { type: Number, default: 0, min: 0 },
+    notificationRewardMinOrderValue: { type: Number, default: 0, min: 0 },
     shippingPrice: { type: Number, default: 149, min: 0 },
     freeShippingThreshold: { type: Number, default: 1999, min: 0 },
     specialCategoryName: { type: String, trim: true, default: "Special Picks" }

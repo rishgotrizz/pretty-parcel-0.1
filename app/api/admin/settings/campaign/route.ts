@@ -8,10 +8,10 @@ import { getSettings, updateSettings } from "@/lib/server/settings";
 
 const campaignSchema = z.object({
   enableNotification: z.boolean(),
-  couponCode: z.string().trim().max(40).optional().or(z.literal("")),
-  discountType: z.enum(["percentage", "flat"]),
-  discountValue: z.coerce.number().min(0),
-  minOrderValue: z.coerce.number().min(0)
+  notificationRewardCode: z.string().trim().max(40).optional().or(z.literal("")),
+  notificationRewardType: z.enum(["percentage", "flat"]),
+  notificationRewardValue: z.coerce.number().min(0),
+  notificationRewardMinOrderValue: z.coerce.number().min(0)
 });
 
 export async function GET() {
@@ -23,10 +23,10 @@ export async function GET() {
   const settings = await getSettings();
   return apiSuccess({
     enableNotification: settings.enableNotification,
-    couponCode: settings.couponCode,
-    discountType: settings.discountType,
-    discountValue: settings.discountValue,
-    minOrderValue: settings.minOrderValue
+    notificationRewardCode: settings.notificationRewardCode,
+    notificationRewardType: settings.notificationRewardType,
+    notificationRewardValue: settings.notificationRewardValue,
+    notificationRewardMinOrderValue: settings.notificationRewardMinOrderValue
   });
 }
 
@@ -39,62 +39,77 @@ export async function PATCH(request: Request) {
   try {
     const parsed = campaignSchema.safeParse(await parseJsonBody(request));
     if (!parsed.success) {
-      return apiError("Please provide valid coupon and notification settings.", 400);
+      return apiError("Please provide valid notification reward settings.", 400);
     }
 
     const previousSettings = await getSettings();
-    const couponCode = parsed.data.couponCode?.trim().toUpperCase() ?? "";
+    const rewardCode = parsed.data.notificationRewardCode?.trim().toUpperCase() ?? "";
 
-    if (couponCode && parsed.data.discountValue <= 0) {
-      return apiError("Discount value must be greater than 0 when coupon code is set.", 400);
+    if (rewardCode && parsed.data.notificationRewardValue <= 0) {
+      return apiError("Reward value must be greater than 0 when a reward code is set.", 400);
     }
 
     await connectToDatabase();
 
-    if (previousSettings.couponCode && previousSettings.couponCode !== couponCode) {
+    if (rewardCode) {
+      const existingCoupon = await Coupon.findOne({ code: rewardCode }).lean<any>();
+      if (
+        existingCoupon &&
+        existingCoupon.source === "general" &&
+        rewardCode !== previousSettings.notificationRewardCode
+      ) {
+        return apiError("This coupon code is already used in normal coupons. Choose a different reward code.", 409);
+      }
+    }
+
+    if (
+      previousSettings.notificationRewardCode &&
+      previousSettings.notificationRewardCode !== rewardCode
+    ) {
       await Coupon.findOneAndUpdate(
-        { code: previousSettings.couponCode },
+        { code: previousSettings.notificationRewardCode, source: "notification_reward" },
         { $set: { isActive: false, autoApply: false } }
       );
     }
 
-    if (couponCode) {
+    if (rewardCode) {
       await Coupon.findOneAndUpdate(
-        { code: couponCode },
+        { code: rewardCode },
         {
           $set: {
-            code: couponCode,
+            code: rewardCode,
             description: "Notification subscriber reward",
-            type: parsed.data.discountType === "flat" ? "fixed" : "percentage",
-            value: parsed.data.discountValue,
-            minOrderValue: parsed.data.minOrderValue,
+            type: parsed.data.notificationRewardType === "flat" ? "fixed" : "percentage",
+            value: parsed.data.notificationRewardValue,
+            minOrderValue: parsed.data.notificationRewardMinOrderValue,
             isActive: true,
-            autoApply: false
+            autoApply: false,
+            source: "notification_reward"
           }
         },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
-    } else if (previousSettings.couponCode) {
+    } else if (previousSettings.notificationRewardCode) {
       await Coupon.findOneAndUpdate(
-        { code: previousSettings.couponCode },
+        { code: previousSettings.notificationRewardCode, source: "notification_reward" },
         { $set: { isActive: false, autoApply: false } }
       );
     }
 
     const settings = await updateSettings({
       enableNotification: parsed.data.enableNotification,
-      couponCode,
-      discountType: parsed.data.discountType,
-      discountValue: parsed.data.discountValue,
-      minOrderValue: parsed.data.minOrderValue
+      notificationRewardCode: rewardCode,
+      notificationRewardType: parsed.data.notificationRewardType,
+      notificationRewardValue: parsed.data.notificationRewardValue,
+      notificationRewardMinOrderValue: parsed.data.notificationRewardMinOrderValue
     });
 
     return apiSuccess({
       enableNotification: settings.enableNotification,
-      couponCode: settings.couponCode,
-      discountType: settings.discountType,
-      discountValue: settings.discountValue,
-      minOrderValue: settings.minOrderValue
+      notificationRewardCode: settings.notificationRewardCode,
+      notificationRewardType: settings.notificationRewardType,
+      notificationRewardValue: settings.notificationRewardValue,
+      notificationRewardMinOrderValue: settings.notificationRewardMinOrderValue
     });
   } catch (error) {
     if (isDuplicateKeyError(error)) {
